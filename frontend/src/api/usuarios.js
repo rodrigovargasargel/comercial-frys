@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://54.145.58.161:8000'
+  baseURL: import.meta.env.VITE_API_URL
 })
 
 export const getUsuarios = () => API.get('/usuarios/')

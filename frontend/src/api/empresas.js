@@ -1,5 +1,5 @@
 import axios from 'axios'
-const API = axios.create({ baseURL: 'http://54.145.58.161:8000' })
+const API = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
 export const getEmpresas = () => API.get('/empresas/')
 export const createEmpresa = (data) => API.post('/empresas/', data)

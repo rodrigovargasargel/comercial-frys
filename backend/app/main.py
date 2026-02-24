@@ -1,8 +1,11 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import users, maquinas, productos, empresas, produccion, auth
 
 app = FastAPI(title="Comercial Frys - Sistema de Producción", version="1.0.0")
+
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")  #estas son variables de entorno porque en prodiccion no funciona el localhost
 
 app.add_middleware(
     CORSMiddleware,
