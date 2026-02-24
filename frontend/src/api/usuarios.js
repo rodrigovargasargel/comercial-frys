@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000'
+  baseURL: 'http://54.145.58.161:8000'
 })
 
 export const getUsuarios = () => API.get('/usuarios/')
