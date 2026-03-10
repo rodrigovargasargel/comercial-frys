@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react'
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
 
-const initialForm = { fecha: '', turno: 'mañana' }
+const initialForm = { fecha: '', turno: 'dia', maquina_id: '', lote: '', usuario_id: '' }
 
-export default function ProduccionModal({ show, onHide, onSave, opId }) {
+export default function ProduccionModal({ show, onHide, onSave, opId, maquinas, usuarios }) {
   const [form, setForm] = useState(initialForm)
 
   useEffect(() => {
     if (show) {
       const hoy = new Date().toISOString().split('T')[0]
-      setForm({ fecha: hoy, turno: 'mañana' })
+      setForm({
+        ...initialForm,
+        fecha: hoy,
+        maquina_id: maquinas[0]?.id || '',
+        usuario_id: usuarios[0]?.id || ''
+      })
     }
-  }, [show])
+  }, [show, maquinas, usuarios])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -20,11 +25,16 @@ export default function ProduccionModal({ show, onHide, onSave, opId }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave({ ...form, op_id: opId })
+    onSave({
+      ...form,
+      op_id: opId,
+      maquina_id: parseInt(form.maquina_id),
+      usuario_id: parseInt(form.usuario_id)
+    })
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton className="bg-dark text-white">
         <Modal.Title>
           <i className="fas fa-industry me-2"></i>
@@ -34,19 +44,45 @@ export default function ProduccionModal({ show, onHide, onSave, opId }) {
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           <Row>
-            <Col md={6}>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Máquina <span className="text-danger">*</span></Form.Label>
+                <Form.Select name="maquina_id" value={form.maquina_id} onChange={handleChange} required>
+                  <option value="">Seleccionar...</option>
+                  {maquinas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Fecha <span className="text-danger">*</span></Form.Label>
                 <Form.Control type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Turno <span className="text-danger">*</span></Form.Label>
                 <Form.Select name="turno" value={form.turno} onChange={handleChange} required>
-                  <option value="mañana">Mañana</option>
-                  <option value="tarde">Tarde</option>
+                  <option value="dia">Día</option>
                   <option value="noche">Noche</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            
+          </Row>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Lote <span className="text-danger">*</span></Form.Label>
+                <Form.Control name="lote" value={form.lote} onChange={handleChange} required placeholder="Ej: L-001" />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Operador <span className="text-danger">*</span></Form.Label>
+                <Form.Select name="usuario_id" value={form.usuario_id} onChange={handleChange} required>
+                  <option value="">Seleccionar...</option>
+                  {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
                 </Form.Select>
               </Form.Group>
             </Col>

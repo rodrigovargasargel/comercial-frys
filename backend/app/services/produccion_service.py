@@ -3,7 +3,6 @@ from sqlalchemy import func
 from app.models.produccion import OrdenProduccion, ProduccionExtrusora, DetalleProduccionExtrusora
 from app.schemas.produccion import OrdenProduccionCreate, OrdenProduccionUpdate, ProduccionExtrusoraCreate, DetalleCreate
 
-# --- Helpers ---
 def _kg_producidos_op(db: Session, op_id: int) -> float:
     total = db.query(func.sum(DetalleProduccionExtrusora.kg))\
         .join(ProduccionExtrusora)\
@@ -18,27 +17,23 @@ def _kg_producidos_produccion(db: Session, produccion_id: int) -> float:
 def _enrich_op(db: Session, op: OrdenProduccion):
     kg_total = _kg_producidos_op(db, op.id)
     op.kg_producidos_total = kg_total
-    op.kg_faltantes = round(max(op.kilos_a_producir - kg_total, 0), 2)
+    op.kg_faltantes = round(max(op.kilos - kg_total, 0), 2)
     return op
 
 def _enrich_produccion(db: Session, produccion: ProduccionExtrusora):
     kg = _kg_producidos_produccion(db, produccion.id)
     produccion.kg_producidos = kg
     produccion.kg_faltantes = round(
-        max(produccion.op.kilos_a_producir - _kg_producidos_op(db, produccion.op_id), 0), 2
+        max(produccion.op.kilos - _kg_producidos_op(db, produccion.op_id), 0), 2
     )
     return produccion
 
-# --- Ordenes de Producción ---
 def get_all_ops(db: Session):
-    ops = db.query(OrdenProduccion).all()
-    return [_enrich_op(db, op) for op in ops]
+    return [_enrich_op(db, op) for op in db.query(OrdenProduccion).all()]
 
 def get_op_by_id(db: Session, op_id: int):
     op = db.query(OrdenProduccion).filter(OrdenProduccion.id == op_id).first()
-    if not op:
-        return None
-    return _enrich_op(db, op)
+    return _enrich_op(db, op) if op else None
 
 def create_op(db: Session, data: OrdenProduccionCreate):
     op = OrdenProduccion(**data.model_dump())
@@ -65,11 +60,9 @@ def delete_op(db: Session, op_id: int):
     db.commit()
     return True
 
-# --- Produccion Extrusora ---
 def get_producciones_by_op(db: Session, op_id: int):
-    producciones = db.query(ProduccionExtrusora)\
-        .filter(ProduccionExtrusora.op_id == op_id).all()
-    return [_enrich_produccion(db, p) for p in producciones]
+    return [_enrich_produccion(db, p) for p in
+            db.query(ProduccionExtrusora).filter(ProduccionExtrusora.op_id == op_id).all()]
 
 def create_produccion(db: Session, data: ProduccionExtrusoraCreate):
     produccion = ProduccionExtrusora(**data.model_dump())
@@ -91,16 +84,33 @@ def delete_produccion(db: Session, produccion_id: int):
     db.commit()
     return True
 
-# --- Detalle ---
 def get_detalles_by_produccion(db: Session, produccion_id: int):
     return db.query(DetalleProduccionExtrusora)\
         .filter(DetalleProduccionExtrusora.produccion_extrusora_id == produccion_id).all()
 
 def create_detalle(db: Session, data: DetalleCreate):
+    produccion = db.query(ProduccionExtrusora)\
+        .filter(ProduccionExtrusora.id == data.produccion_extrusora_id).first()
+    if not produccion:
+        raise ValueError("Producción no encontrada")
+
+    kg_actuales = _kg_producidos_op(db, produccion.op_id)
+    op = db.query(OrdenProduccion).filter(OrdenProduccion.id == produccion.op_id).first()
+
+    if (kg_actuales + data.kg) > (op.kilos + 50):
+        raise ValueError(f"Excede del total de kg definidos en la OP ({op.kilos} kg)")
+
     detalle = DetalleProduccionExtrusora(**data.model_dump())
     db.add(detalle)
     db.commit()
     db.refresh(detalle)
+
+    # Verificar si la OP quedó completada
+    kg_nuevos = _kg_producidos_op(db, op.id)
+    if kg_nuevos >= op.kilos:
+        op.estado = "completada"
+        db.commit()
+
     return detalle
 
 def delete_detalle(db: Session, detalle_id: int):
@@ -111,23 +121,3 @@ def delete_detalle(db: Session, detalle_id: int):
     db.delete(detalle)
     db.commit()
     return True
-
-def create_detalle(db: Session, data: DetalleCreate):
-    # Obtener la OP desde la produccion
-    produccion = db.query(ProduccionExtrusora)\
-        .filter(ProduccionExtrusora.id == data.produccion_extrusora_id).first()
-    if not produccion:
-        raise ValueError("Producción no encontrada")
-
-    # Calcular kg ya ingresados en toda la OP
-    kg_actuales = _kg_producidos_op(db, produccion.op_id)
-    op = db.query(OrdenProduccion).filter(OrdenProduccion.id == produccion.op_id).first()
-
-    if (kg_actuales + data.kg) > (op.kilos_a_producir + 50):
-        raise ValueError(f"Los kg ingresados superan en más de 50 kg los kilos pedidos en la OP ({op.kilos_a_producir} kg)")
-
-    detalle = DetalleProduccionExtrusora(**data.model_dump())
-    db.add(detalle)
-    db.commit()
-    db.refresh(detalle)
-    return detalle    

@@ -45,9 +45,9 @@ export default function LoginPage() {
         boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 13, color: '#999', letterSpacing: 3, marginBottom: 4 }}>SISTEMA DE</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1a1a2e', letterSpacing: 2 }}>COMERCIAL FRYS</div>
-          <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>Producción</div>
+          <div style={{ fontSize: 13, color: '#999', letterSpacing: 3, marginBottom: 4 }}>Comercial Frys</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1a1a2e', letterSpacing: 2 }}>FRYS PRO</div>
+          <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>Sistema de Producción</div>
         </div>
 
         {error && (

@@ -9,14 +9,13 @@ class EstadoOPEnum(str, Enum):
     completada = "completada"
     cancelada = "cancelada"
 
-class TurnoEnum(str, Enum):
-    manana = "mañana"
-    tarde = "tarde"
-    noche = "noche"
-
-class CalibreEnum(str, Enum):
+class DensidadEnum(str, Enum):
     alta = "alta"
     baja = "baja"
+
+class TurnoEnum(str, Enum):
+    dia = "dia"
+    noche = "noche"
 
 class MaquinaSimple(BaseModel):
     id: int
@@ -30,16 +29,9 @@ class ProductoSimple(BaseModel):
     class Config:
         from_attributes = True
 
-class TipoProductoSimple(BaseModel):
+class ColorSimple(BaseModel):
     id: int
     nombre: str
-    class Config:
-        from_attributes = True
-
-class ProductoConTipo(BaseModel):
-    id: int
-    nombre: str
-    tipo_producto: TipoProductoSimple
     class Config:
         from_attributes = True
 
@@ -49,35 +41,53 @@ class EmpresaSimple(BaseModel):
     class Config:
         from_attributes = True
 
+class UsuarioSimple(BaseModel):
+    id: int
+    nombre: str
+    class Config:
+        from_attributes = True
+
+class TipoProductoSimple(BaseModel):
+    id: int
+    nombre: str
+    class Config:
+        from_attributes = True
+
 # --- Orden de Producción ---
 class OrdenProduccionCreate(BaseModel):
-    maquina_id: int
-    kilos_a_producir: float
-    lote: str
-    calibre: CalibreEnum
-    producto_id: Optional[int] = None
+    fecha: date
+    producto_id: int
+    densidad: DensidadEnum
+    color_id: int
+    ancho: int
+    espesor: int
+    kilos: float
     empresa_id: Optional[int] = None
     oc_cliente: Optional[str] = None
 
 class OrdenProduccionUpdate(BaseModel):
-    maquina_id: Optional[int] = None
-    kilos_a_producir: Optional[float] = None
-    lote: Optional[str] = None
-    calibre: Optional[CalibreEnum] = None
-    estado: Optional[EstadoOPEnum] = None
+    fecha: Optional[date] = None
     producto_id: Optional[int] = None
+    densidad: Optional[DensidadEnum] = None
+    color_id: Optional[int] = None
+    ancho: Optional[int] = None
+    espesor: Optional[int] = None
+    kilos: Optional[float] = None
+    estado: Optional[EstadoOPEnum] = None
     empresa_id: Optional[int] = None
     oc_cliente: Optional[str] = None
 
 class OrdenProduccionOut(BaseModel):
     id: int
-    lote: str
-    kilos_a_producir: float
-    calibre: CalibreEnum
+    fecha: date
+    densidad: DensidadEnum
+    ancho: int
+    espesor: int
+    kilos: float
     estado: EstadoOPEnum
     oc_cliente: Optional[str]
-    maquina: MaquinaSimple
-    producto: Optional[ProductoConTipo]
+    producto: Optional[ProductoSimple]
+    color: Optional[ColorSimple]
     empresa: Optional[EmpresaSimple]
     kg_producidos_total: float = 0
     kg_faltantes: float = 0
@@ -90,12 +100,18 @@ class ProduccionExtrusoraCreate(BaseModel):
     op_id: int
     fecha: date
     turno: TurnoEnum
+    maquina_id: int
+    lote: str
+    usuario_id: int
 
 class ProduccionExtrusoraOut(BaseModel):
     id: int
     op_id: int
     fecha: date
     turno: TurnoEnum
+    lote: str
+    maquina: MaquinaSimple
+    usuario: UsuarioSimple
     kg_producidos: float = 0
     kg_faltantes: float = 0
 
@@ -105,19 +121,19 @@ class ProduccionExtrusoraOut(BaseModel):
 # --- Detalle ---
 class DetalleCreate(BaseModel):
     produccion_extrusora_id: int
-    producto_id: int
-    kg: float
     numero_rollo: int
-    ancho: int
-    espesor: int
+    kg: float
 
 class DetalleOut(BaseModel):
     id: int
-    producto: ProductoSimple
-    kg: float
     numero_rollo: int
-    ancho: int
-    espesor: int
+    kg: float
 
+    class Config:
+        from_attributes = True
+
+class ProductoSimpleOut(BaseModel):
+    id: int
+    nombre: str
     class Config:
         from_attributes = True

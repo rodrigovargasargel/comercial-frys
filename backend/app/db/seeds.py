@@ -39,7 +39,7 @@ if __name__ == "__main__":
     seed_perfiles()
     seed_tipo_maquinas()    
 
-from app.models.producto import TipoProducto, UMedida
+from app.models.producto import TipoProducto, UMedida, Color
 
 def seed_tipo_productos():
     db = SessionLocal()
@@ -74,8 +74,51 @@ def seed_u_medidas():
     db.close()
     print("✅ Unidades de medida creadas")
 
+def seed_colores():
+    db = SessionLocal()
+    colores = [
+        Color(nombre="Transparente"),
+        Color(nombre="Blanco"),
+        Color(nombre="Amarillo"),
+        Color(nombre="Verde"),
+        Color(nombre="Rojo"),
+        Color(nombre="Azul"),
+         Color(nombre="Cafe"),
+          Color(nombre="Gris"),
+           Color(nombre="Morado"),
+    ]
+    for color in colores:
+        existe = db.query(Color).filter(Color.nombre == color.nombre).first()
+        if not existe:
+            db.add(color)
+    db.commit()
+    db.close()
+    print("✅ Colores creados")    
+
 if __name__ == "__main__":
     seed_perfiles()
     seed_tipo_maquinas()
     seed_tipo_productos()
-    seed_u_medidas()    
+    seed_u_medidas() 
+    seed_colores()   
+
+
+from app.models.materia_prima import MateriaPrimaTipo
+
+def seed_mp_tipos():
+    db = SessionLocal()
+    tipos = ['Baja', 'Lineal', 'Alta', 'Uso Pesado', 'Recli BCO', 'Recl Natural']
+    for nombre in tipos:
+        if not db.query(MateriaPrimaTipo).filter(MateriaPrimaTipo.nombre == nombre).first():
+            db.add(MateriaPrimaTipo(nombre=nombre))
+    db.commit()
+    db.close()
+    print("✅ Tipos MP creados")
+
+if __name__ == "__main__":
+    seed_perfiles()
+    seed_tipo_maquinas()
+    seed_tipo_productos()
+    seed_u_medidas()
+    seed_colores()
+    seed_mp_tipos()    

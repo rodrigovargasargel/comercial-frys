@@ -7,6 +7,7 @@ import ProductosPage from './components/productos/ProductosPage'
 import EmpresasPage from './components/empresas/EmpresasPage'
 import ProduccionPage from './components/produccion/ProduccionPage'
 import MaquinasPage from './components/maquinas/MaquinasPage'
+import MateriaPrimaPage from './components/materia_prima/MateriaPrimaPage'
 
 
 function RutaProtegida({ children, perfilesPermitidos }) {
@@ -60,6 +61,8 @@ function AppRoutes() {
           </RutaProtegida>
         } />
       </Route>
+
+      <Route path="/materia-prima" element={<MateriaPrimaPage />} />
     </Routes>
   )
 }

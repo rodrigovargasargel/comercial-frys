@@ -8,6 +8,8 @@ from app.models import maquina
 from app.models import producto
 from app.models import empresa
 from app.models import produccion 
+from app.models.produccion import Color
+from app.models.materia_prima import MateriaPrima, MateriaPrimaDetalle, MateriaPrimaTipo
 
 
 config = context.config

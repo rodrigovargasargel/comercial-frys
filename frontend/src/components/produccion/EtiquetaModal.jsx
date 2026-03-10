@@ -8,12 +8,15 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
   if (!detalle || !produccion || !op) return null
 
   const qrData = JSON.stringify({
-    lote: op.lote,
+    op: op.id,
     rollo: detalle.numero_rollo,
-    producto: detalle.producto.nombre,
+    producto: op.producto?.nombre,
     kg: detalle.kg,
-    ancho: detalle.ancho,
-    espesor: detalle.espesor,
+    ancho: op.ancho,
+    espesor: op.espesor,
+    densidad: op.densidad,
+    color: op.color?.nombre,
+    lote: produccion.lote,
     fecha: produccion.fecha,
     turno: produccion.turno
   })
@@ -30,11 +33,8 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
             body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
             .etiqueta { width: 320px; border: 2px solid black; padding: 16px; text-align: center; }
             .empresa { font-size: 13px; font-weight: bold; letter-spacing: 2px; border-bottom: 1px solid black; padding-bottom: 8px; margin-bottom: 8px; }
-            .lote { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
-            .turno-fecha { font-size: 12px; color: #555; margin-bottom: 12px; }
-            .rollo { font-size: 32px; font-weight: bold; margin-bottom: 4px; }
-            .medidas { font-size: 16px; margin-bottom: 4px; }
-            .kg { font-size: 28px; font-weight: bold; margin-bottom: 12px; }
+            .rollo { font-size: 36px; font-weight: bold; margin-bottom: 4px; }
+            .kg { font-size: 32px; font-weight: bold; margin-bottom: 12px; }
             .qr-container { display: flex; justify-content: center; margin-top: 8px; }
             svg { width: 100px !important; height: 100px !important; }
           </style>
@@ -52,7 +52,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       <Modal.Header closeButton className="bg-dark text-white">
         <Modal.Title>
           <i className="fas fa-tag me-2"></i>
-          Etiqueta — Rollo #{detalle.numero_rollo}
+          Etiqueta — Rollo #{String(detalle.numero_rollo).padStart(3, '0')}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
@@ -69,14 +69,14 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
               COMERCIAL FRYS
             </div>
 
-            {/* Lote */}
-            <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 2 }}>
-              LOTE: {op.lote}
+            {/* Fecha y Turno */}
+            <div style={{ fontSize: 12, color: '#555', marginBottom: 4 }}>
+              {produccion.fecha} — Turno {produccion.turno}
             </div>
 
-            {/* Fecha y Turno */}
-            <div style={{ fontSize: 12, color: '#555', marginBottom: 12 }}>
-              {produccion.fecha} — Turno {produccion.turno}
+            {/* Lote */}
+            <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
+              LOTE: {produccion.lote}
             </div>
 
             {/* N° Rollo */}
@@ -87,12 +87,17 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
 
             {/* Producto */}
             <div style={{ fontSize: 13, marginBottom: 4 }}>
-              {detalle.producto.nombre}
+              {op.producto?.nombre}
             </div>
 
             {/* Medidas */}
-            <div style={{ fontSize: 16, marginBottom: 4 }}>
-              {detalle.ancho} mm × {detalle.espesor} mm
+            <div style={{ fontSize: 16, marginBottom: 2 }}>
+              {op.ancho} mm × {op.espesor} mm
+            </div>
+
+            {/* Densidad y Color */}
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+              Densidad: {op.densidad} | Color: {op.color?.nombre}
             </div>
 
             {/* KG */}
