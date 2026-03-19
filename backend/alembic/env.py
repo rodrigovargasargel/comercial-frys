@@ -10,6 +10,7 @@ from app.models import empresa
 from app.models import produccion 
 from app.models.produccion import Color
 from app.models.materia_prima import MateriaPrima, MateriaPrimaDetalle, MateriaPrimaTipo
+from app.models.selladora import OPSelladora, ProduccionSelladora, ProduccionSelladoraDetalle
 
 
 config = context.config

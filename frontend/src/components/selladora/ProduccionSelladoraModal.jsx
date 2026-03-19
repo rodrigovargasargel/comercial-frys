@@ -1,0 +1,72 @@
+import { useState, useEffect } from 'react'
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
+
+const initialForm = { fecha: '', turno: 'dia', maquina_id: '' }
+
+export default function ProduccionSelladoraModal({ show, onHide, onSave, opId, maquinas }) {
+  const [form, setForm] = useState(initialForm)
+
+  useEffect(() => {
+    if (show) {
+      const hoy = new Date().toISOString().split('T')[0]
+      setForm({ ...initialForm, fecha: hoy, maquina_id: maquinas[0]?.id || '' })
+    }
+  }, [show, maquinas])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSave({ ...form, op_id: opId, maquina_id: parseInt(form.maquina_id) })
+  }
+
+  return (
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton className="bg-dark text-white">
+        <Modal.Title>
+          <i className="fas fa-cut me-2"></i>
+          Agregar Turno de Producción
+        </Modal.Title>
+      </Modal.Header>
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Fecha <span className="text-danger">*</span></Form.Label>
+                <Form.Control type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Turno <span className="text-danger">*</span></Form.Label>
+                <Form.Select name="turno" value={form.turno} onChange={handleChange} required>
+                  <option value="dia">Día</option>
+                  <option value="noche">Noche</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Form.Group className="mb-3">
+            <Form.Label>Máquina Selladora <span className="text-danger">*</span></Form.Label>
+            <Form.Select name="maquina_id" value={form.maquina_id} onChange={handleChange} required>
+              <option value="">Seleccionar...</option>
+              {maquinas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onHide}>
+            <i className="fas fa-times me-1"></i> Cancelar
+          </Button>
+          <Button variant="dark" type="submit">
+            <i className="fas fa-save me-1"></i> Guardar
+          </Button>
+        </Modal.Footer>
+      </Form>
+    </Modal>
+  )
+}
