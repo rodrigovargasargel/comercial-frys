@@ -1,47 +1,18 @@
 import { Modal, Button } from 'react-bootstrap'
-import { QRCodeSVG } from 'qrcode.react'
 import { useRef } from 'react'
+import Barcode from 'react-barcode'
 
 export default function EtiquetaModal({ show, onHide, detalle, produccion, op }) {
   const printRef = useRef()
 
   if (!detalle || !produccion || !op) return null
 
-  const qrData = JSON.stringify({
-    op: op.id,
-    rollo: detalle.numero_rollo,
-    producto: op.producto?.nombre,
-    kg: detalle.kg,
-    ancho: op.ancho,
-    espesor: op.espesor,
-    densidad: op.densidad,
-    color: op.color?.nombre,
-    lote: produccion.lote,
-    fecha: produccion.fecha,
-    turno: produccion.turno
-  })
+  const barcodeValue = `${op.id}-${String(detalle.numero_rollo).padStart(3, '0')}-${produccion.lote}`
 
   const handlePrint = () => {
     const contenido = printRef.current.innerHTML
-    const ventana = window.open('', '_blank', 'width=400,height=500')
-    ventana.document.write(`
-      <html>
-        <head>
-          <title>Etiqueta Rollo #${detalle.numero_rollo}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
-            .etiqueta { width: 320px; border: 2px solid black; padding: 16px; text-align: center; }
-            .empresa { font-size: 13px; font-weight: bold; letter-spacing: 2px; border-bottom: 1px solid black; padding-bottom: 8px; margin-bottom: 8px; }
-            .rollo { font-size: 36px; font-weight: bold; margin-bottom: 4px; }
-            .kg { font-size: 32px; font-weight: bold; margin-bottom: 12px; }
-            .qr-container { display: flex; justify-content: center; margin-top: 8px; }
-            svg { width: 100px !important; height: 100px !important; }
-          </style>
-        </head>
-        <body>${contenido}</body>
-      </html>
-    `)
+    const ventana = window.open('', '_blank', 'width=500,height=450')
+    ventana.document.write('<html><head><title>Etiqueta</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; } .etiqueta { width: 264px; height: 378px; border: 2px solid black; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; } svg { max-width: 100%; }</style></head><body>' + contenido + '</body></html>')
     ventana.document.close()
     ventana.focus()
     setTimeout(() => { ventana.print(); ventana.close() }, 500)
@@ -57,59 +28,48 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
         <div ref={printRef}>
-          <div className="etiqueta" style={{
-            width: 320,
-            border: '2px solid black',
-            padding: 16,
-            textAlign: 'center',
-            fontFamily: 'Arial, sans-serif'
-          }}>
-            {/* Empresa */}
-            <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: 2, borderBottom: '1px solid black', paddingBottom: 8, marginBottom: 8 }}>
-              COMERCIAL FRYS
+          <div className="etiqueta" style={{ width: 264, height: 378, border: '2px solid black', padding: 10, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+
+            <div style={{ borderBottom: '1px solid black', paddingBottom: 6 }}>
+              <div style={{ fontSize: 14, fontWeight: 'bold', letterSpacing: 2 }}>COMERCIAL FRYS</div>
             </div>
 
-            {/* Fecha y Turno */}
-            <div style={{ fontSize: 12, color: '#555', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: '#555' }}>
               {produccion.fecha} — Turno {produccion.turno}
             </div>
 
-            {/* Lote */}
-            <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 'bold' }}>
               LOTE: {produccion.lote}
             </div>
 
-            {/* N° Rollo */}
-            <div style={{ fontSize: 13, color: '#555' }}>N° ROLLO</div>
-            <div style={{ fontSize: 36, fontWeight: 'bold', marginBottom: 4 }}>
-              {String(detalle.numero_rollo).padStart(3, '0')}
+            <div>
+              <div style={{ fontSize: 11, color: '#555' }}>N° ROLLO</div>
+              <div style={{ fontSize: 38, fontWeight: 'bold', lineHeight: 1 }}>
+                {String(detalle.numero_rollo).padStart(3, '0')}
+              </div>
             </div>
 
-            {/* Producto */}
-            <div style={{ fontSize: 13, marginBottom: 4 }}>
-              {op.producto?.nombre}
-            </div>
+            <div style={{ fontSize: 12 }}>{op.producto?.nombre}</div>
 
-            {/* Medidas */}
-            <div style={{ fontSize: 16, marginBottom: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold' }}>
               {op.ancho} mm × {op.espesor} mm
             </div>
 
-            {/* Densidad y Color */}
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: '#555' }}>
               Densidad: {op.densidad} | Color: {op.color?.nombre}
             </div>
 
-            {/* KG */}
-            <div style={{ fontSize: 13, color: '#555' }}>PESO</div>
-            <div style={{ fontSize: 32, fontWeight: 'bold', marginBottom: 12 }}>
-              {detalle.kg} KG
+            <div>
+              <div style={{ fontSize: 11, color: '#555' }}>PESO</div>
+              <div style={{ fontSize: 30, fontWeight: 'bold', lineHeight: 1 }}>
+                {detalle.kg} KG
+              </div>
             </div>
 
-            {/* QR */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-              <QRCodeSVG value={qrData} size={100} />
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Barcode value={barcodeValue} width={1.2} height={35} fontSize={9} margin={0} />
             </div>
+
           </div>
         </div>
       </Modal.Body>
