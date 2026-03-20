@@ -12,7 +12,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
   const handlePrint = () => {
     const contenido = printRef.current.innerHTML
     const ventana = window.open('', '_blank', 'width=500,height=450')
-    ventana.document.write('<html><head><title>Etiqueta</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; } .etiqueta { width: 264px; height: 378px; border: 2px solid black; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; } svg { max-width: 100%; }</style></head><body>' + contenido + '</body></html>')
+    ventana.document.write('<html><head><title>Etiqueta</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } @page { margin: 0; size: 7cm 10cm; } body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: flex-start; background: white; } .etiqueta { width: 7cm; height: 10cm; border: 2px solid black; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; } svg { max-width: 100%; }</style></head><body>' + contenido + '</body></html>')
     ventana.document.close()
     ventana.focus()
     setTimeout(() => { ventana.print(); ventana.close() }, 500)
@@ -28,8 +28,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
         <div ref={printRef}>
-          <div className="etiqueta" style={{ width: 264, height: 378, border: '2px solid black', padding: 10, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
-
+          <div className="etiqueta" style={{ width: '7cm', height: '10cm', border: '2px solid black', padding: 8, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
             <div style={{ borderBottom: '1px solid black', paddingBottom: 6 }}>
               <div style={{ fontSize: 14, fontWeight: 'bold', letterSpacing: 2 }}>COMERCIAL FRYS</div>
             </div>
