@@ -3,6 +3,7 @@ import { Container, Button, Alert, Spinner, Table, Badge } from 'react-bootstrap
 import OPSelladoraModal from './OPSelladoraModal'
 import ProduccionSelladoraModal from './ProduccionSelladoraModal'
 import DetalleSelladoraModal from './DetalleSelladoraModal'
+import EtiquetaSelladoraModal from './EtiquetaSelladoraModal'
 import {
   getOPsSelladora, createOPSelladora, updateOPSelladora, deleteOPSelladora,
   getProduccionesSelladora, createProduccionSelladora, deleteProduccionSelladora,
@@ -27,6 +28,7 @@ const formatFecha = (fecha) => {
   return `${d}-${m}-${y}`
 }
 
+
 export default function SelladoraPage() {
   const [ops, setOps] = useState([])
   const [empresas, setEmpresas] = useState([])
@@ -49,6 +51,8 @@ export default function SelladoraPage() {
   const [showDetalleModal, setShowDetalleModal] = useState(false)
   const [prodIdParaDetalle, setProdIdParaDetalle] = useState(null)
   const [opParaDetalle, setOpParaDetalle] = useState(null)
+  const [showEtiquetaSelladora, setShowEtiquetaSelladora] = useState(false)
+const [etiquetaSelladoraData, setEtiquetaSelladoraData] = useState({ detalle: null, produccion: null, op: null })
 
   const cargarDatos = async () => {
     try {
@@ -331,6 +335,13 @@ export default function SelladoraPage() {
                                                 <td>{det.q_unidades_por_paquete}</td>
                                                 <td><strong>{det.unidades.toLocaleString()}</strong></td>
                                                 <td>
+                                                  <Button size="sm" variant="outline-info" className="me-1"
+                                                onClick={() => {
+                                                  setEtiquetaSelladoraData({ detalle: det, produccion: prod, op })
+                                                  setShowEtiquetaSelladora(true)
+                                                }}>
+                                                <i className="fas fa-tag"></i>
+                                              </Button>
                                                   <Button size="sm" variant="outline-danger"
                                                     onClick={() => handleEliminarDetalle(det.id, prod.id)}>
                                                     <i className="fas fa-trash"></i>
@@ -385,6 +396,16 @@ export default function SelladoraPage() {
           op={opParaDetalle}
         />
       )}
+
+      {etiquetaSelladoraData.detalle && (
+          <EtiquetaSelladoraModal
+            show={showEtiquetaSelladora}
+            onHide={() => { setShowEtiquetaSelladora(false) }}
+            detalle={etiquetaSelladoraData.detalle}
+            produccion={etiquetaSelladoraData.produccion}
+            op={etiquetaSelladoraData.op}
+          />
+        )}
     </Container>
   )
 }
