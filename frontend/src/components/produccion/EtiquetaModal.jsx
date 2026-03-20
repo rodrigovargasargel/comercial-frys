@@ -28,8 +28,8 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
         <div ref={printRef}>
-          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 0, border: '2px solid black', padding: 8, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
-            <div style={{ borderBottom: '1px solid black', paddingBottom: 6 }}>
+          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 0, border: '2px solid black', padding: 1, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+            <div style={{ borderBottom: '1px solid black', paddingBottom: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 'bold', letterSpacing: 2 }}>COMERCIAL FRYS</div>
             </div>
 
@@ -54,7 +54,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
               {op.ancho} cm × {op.espesor} mcr
             </div>
 
-            <div style={{ fontSize: 12, color: '#555' }}>
+            <div style={{ fontSize: 1, color: '#555' }}>
               Densidad: {op.densidad} | Color: {op.color?.nombre}
             </div>
 
