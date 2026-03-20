@@ -1,7 +1,7 @@
 import { Modal, Button } from 'react-bootstrap'
 import { useRef } from 'react'
-import Barcode from 'react-barcode'
 
+import { QRCodeSVG } from 'qrcode.react'
 export default function EtiquetaModal({ show, onHide, detalle, produccion, op }) {
   const printRef = useRef()
 
@@ -52,7 +52,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
             <div style={{ fontSize: 12 }}>{op.producto?.nombre}</div>
 
             <div style={{ fontSize: 14, fontWeight: 'bold' }}>
-              {op.ancho} mm × {op.espesor} mm
+              {op.ancho} mm × {op.espesor} mcr
             </div>
 
             <div style={{ fontSize: 11, color: '#555' }}>
@@ -66,8 +66,9 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
               </div>
             </div>
 
+          
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Barcode value={barcodeValue} width={1.2} height={35} fontSize={9} margin={0} />
+              <QRCodeSVG value={barcodeValue} size={80} />
             </div>
 
           </div>
