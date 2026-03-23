@@ -9,6 +9,7 @@ import ProduccionPage from './components/produccion/ProduccionPage'
 import MaquinasPage from './components/maquinas/MaquinasPage'
 import MateriaPrimaPage from './components/materia_prima/MateriaPrimaPage'
 import SelladoraPage from './components/selladora/SelladoraPage'
+import ColoresPage from './components/colores/ColoresPage'
 
 
 function RutaProtegida({ children, perfilesPermitidos }) {
@@ -66,6 +67,7 @@ function AppRoutes() {
 
       <Route path="/materia-prima" element={<MateriaPrimaPage />} />
       <Route path="/produccion-selladora" element={<SelladoraPage />} />
+      <Route path="/colores" element={<ColoresPage />} />
     </Routes>
   )
 }

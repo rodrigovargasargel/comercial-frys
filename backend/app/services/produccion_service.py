@@ -29,7 +29,7 @@ def _enrich_produccion(db: Session, produccion: ProduccionExtrusora):
     return produccion
 
 def get_all_ops(db: Session):
-    return [_enrich_op(db, op) for op in db.query(OrdenProduccion).all()]
+    return [_enrich_op(db, op) for op in db.query(OrdenProduccion).order_by(OrdenProduccion.id.desc()).all()]
 
 def get_op_by_id(db: Session, op_id: int):
     op = db.query(OrdenProduccion).filter(OrdenProduccion.id == op_id).first()

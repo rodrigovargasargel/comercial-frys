@@ -90,3 +90,16 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     created_at: Optional[datetime] = None
     class Config:
         from_attributes = True
+
+class ProduccionSelladoraDetalleOut(BaseModel):
+    id: int
+    detalle_extrusora_id: int
+    q_paquetes: int
+    q_unidades_por_paquete: int
+    unidades: int
+    kilos: float
+    numero_rollo: int = 0
+    lote_extrusora: Optional[str] = None
+    created_at: Optional[datetime] = None
+    class Config:
+        from_attributes = True        

@@ -13,6 +13,7 @@ export default function Sidebar() {
     { path: '/productos', icon: 'fa-cubes', label: 'Productos' },
     { path: '/empresas', icon: 'fa-building', label: 'Empresas' },
     { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
+    { path: '/colores', icon: 'fa-palette', label: 'Colores' },
 
     
   ]

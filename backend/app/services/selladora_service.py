@@ -171,3 +171,15 @@ def delete_detalle(db: Session, detalle_id: int):
     db.delete(det)
     db.commit()
     return True
+
+def get_detalles_by_produccion(db: Session, prod_id: int):
+    detalles = db.query(ProduccionSelladoraDetalle)\
+        .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod_id).all()
+    for d in detalles:
+        d.numero_rollo = d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0
+        # Adjuntar lote del rollo de extrusora
+        if d.detalle_extrusora and d.detalle_extrusora.produccion:
+            d.lote_extrusora = d.detalle_extrusora.produccion.lote
+        else:
+            d.lote_extrusora = None
+    return detalles    

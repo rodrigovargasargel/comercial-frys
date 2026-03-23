@@ -67,41 +67,53 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
             {/* Columna izquierda */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
+              
               {/* Cabecera */}
-              <div style={{ borderBottom: '1px solid black', paddingBottom: 4, marginBottom: 4 }}>
+                <div style={{ borderBottom: '1px solid black', paddingBottom: 4, marginBottom: 4 }}>
                 <div style={{ fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
-                  COMERCIAL FRYS LTDA
+                    COMERCIAL FRYS LTDA
                 </div>
                 <div style={{ fontSize: 10, color: '#444' }}>www.comercialfrys.cl</div>
-                <div style={{ fontSize: 10, color: '#444' }}>Cel: +569 96797817</div>
-              </div>
+                <div style={{ fontSize: 10, color: '#444' }}>Cel: +569 96797817 | rmolina@comercialfrys.cl</div>
+                </div>
 
-              {/* Producto */}
-              <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 2 }}>
+                {/* Producto */}
+                <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 2 }}>
                 {op.producto?.nombre} {op.color?.nombre} {densidad}
-              </div>
+                </div>
 
-              {/* Medidas */}
-              <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 2 }}>
+                {/* Medidas */}
+                <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 2 }}>
                 {op.ancho} cm × {op.largo} cm × {op.espesor} mcr
-              </div>
+                </div>
 
-              {/* Unidades */}
-              <div style={{ fontSize: 12, marginBottom: 2 }}>
-                <span style={{ color: '#555' }}>Unidades por paquete: </span>
-                <strong>{detalle.q_unidades_por_paquete}</strong>
-              </div>
+                {/* Unidades */}
+                <div style={{ textAlign: 'center' }}>
+               
+                <div style={{  fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
+                     
+                    {detalle.q_unidades_por_paquete}
+                    <div style={{ fontSize: 10, color: '#555' }}>UNIDADES</div>
+                </div>
+                </div>
 
-              {/* Pie */}
-              <div style={{ borderTop: '1px solid black', paddingTop: 4, fontSize: 10 }}>
+                {/* Pie */}
+                <div style={{ borderTop: '1px solid black', paddingTop: 4, fontSize: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span><strong>Elab:</strong> {fechaElaboracion}</span>
-                  <span><strong>Venc:</strong> {fechaVencimiento}</span>
+                    <span><strong>Elab:</strong> {fechaElaboracion}</span>
+                    <span><strong>Venc:</strong> {fechaVencimiento}</span>
                 </div>
                 <div style={{ marginTop: 2 }}>
-                  <strong>Lote:</strong> {produccion.lote}
+                <strong>Lote:</strong> {detalle.lote_extrusora || produccion.lote}
                 </div>
-              </div>
+                </div>
+             
+
+             
+
+              
+
+          
 
             </div>
 
