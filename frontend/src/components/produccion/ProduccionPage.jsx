@@ -305,13 +305,13 @@ export default function ProduccionPage() {
                     </td>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.empresa?.nombre || '—'}</td>
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                      <Button size="sm" variant="outline-success" className="me-1" style={btnStyle} onClick={() => exportarExcelOP(op)}>
+                      <Button size="sm" title="Informe Excel" variant="outline-success" className="me-1" style={btnStyle} onClick={() => exportarExcelOP(op)}>
                         <i className="fas fa-file-excel"></i>
                       </Button>
-                      <Button size="sm" variant="outline-primary" className="me-1" style={btnStyle} onClick={() => { setOpParaPacking(op); setShowPacking(true) }}>
+                      <Button size="sm" title="Packing" variant="outline-primary" className="me-1" style={btnStyle} onClick={() => { setOpParaPacking(op); setShowPacking(true) }}>
                         <i className="fas fa-truck"></i>
                       </Button>
-                      <Button size="sm" variant="outline-dark" className="me-1" style={btnStyle} onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
+                      <Button size="sm"  title="Editar" variant="outline-dark" className="me-1" style={btnStyle} onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
                         <i className="fas fa-edit"></i>
                       </Button>
                       {op.estado === 'pendiente' && (

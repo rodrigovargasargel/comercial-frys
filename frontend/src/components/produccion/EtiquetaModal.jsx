@@ -28,7 +28,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
         <div ref={printRef}>
-          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 0, paddingTop: '1cm', paddingLeft:'1cm', border: '2px solid black', padding: 1, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 0,  border: '2px solid black', padding: 1, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
             <div style={{ borderBottom: '1px solid black', paddingBottom: 1 }}>
               <div style={{ fontSize: 18, fontWeight: 'bold', letterSpacing: 2 }}>COMERCIAL FRYS</div>
             </div>
@@ -48,18 +48,18 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
               </div>
             </div>
 
-            <div style={{ fontSize: 16 }}>{op.producto?.nombre}</div>
+            
 
             <div style={{ fontSize: 18, fontWeight: 'bold' }}>
               {op.ancho} cm × {op.espesor} mcr
             </div>
 
-            <div style={{ fontSize: 14, color: '#555' }}>
-              Densidad: {op.densidad} | Color: {op.color?.nombre}
+            <div style={{ fontSize: 18, color: '#555' }}>
+              {op.producto?.nombre}  {op.color?.nombre} |  {op.densidad}
             </div>
 
             <div>
-              <div style={{ fontSize: 14, color: '#555' }}>PESO</div>
+              
               <div style={{ fontSize: 38, fontWeight: 'bold', lineHeight: 1 }}>
                 {detalle.kg} KG
               </div>
@@ -67,7 +67,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
 
           
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <QRCodeSVG value={barcodeValue} size={100} />
+              <QRCodeSVG value={barcodeValue} size={90} />
             </div>
 
           </div>
