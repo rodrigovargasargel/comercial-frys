@@ -244,7 +244,9 @@ export default function ProduccionPage() {
       </div>
 
       {error && <Alert variant="danger" dismissible onClose={() => setError(null)} className="py-2 small">{error}</Alert>}
-
+      {opExpandida && (
+          <div className="op-overlay" onClick={() => setOpExpandida(null)} />
+        )}
       {loading ? (
         <div className="text-center py-5"><Spinner animation="border" variant="dark" /></div>
       ) : (
@@ -278,7 +280,7 @@ export default function ProduccionPage() {
                 </tr>
               ) : ops.map(op => (
                 <React.Fragment key={op.id}>
-                  <tr style={{ cursor: 'pointer' }}>
+                  <tr style={{ cursor: 'pointer' }}   className={opExpandida === op.id ? 'op-row-activa' : ''}>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>
                       <i className={`fas fa-chevron-${opExpandida === op.id ? 'down' : 'right'} text-muted`}></i>
                     </td>
@@ -324,34 +326,36 @@ export default function ProduccionPage() {
 
                   {/* Nivel 2: Turnos */}
                   {opExpandida === op.id && (
-                    <tr>
-                      <td colSpan={14} className="p-0">
-                        <div className="bg-light px-3 py-2 border-start border-4 border-warning">
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <strong style={{ fontSize: 'clamp(11px,1.2vw,13px)' }}>
-                              <i className="fas fa-calendar-alt me-2 text-warning"></i>Turnos NP #{op.id}
-                            </strong>
-                            <Button size="sm" variant="warning" style={btnStyle}
-                              onClick={() => { setOpIdParaProduccion(op.id); setShowProduccionModal(true) }}>
-                              <i className="fas fa-plus me-1"></i>Agregar Extrusora
-                            </Button>
-                          </div>
-                          <div style={{ overflowX: 'auto' }}>
-                            <Table size="sm" hover className="mb-0 bg-white" style={{ minWidth: 700 }}>
-                              <thead className="table-warning">
-                                <tr>
-                                  <th style={thStyle}></th>
-                                  <th style={thStyle}>Máquina</th>
-                                  <th style={thStyle}>Fecha</th>
-                                  <th style={thStyle}>Turno</th>
-                                  <th style={thStyle}>Lote</th>
-                                  <th style={thStyle}>Operador</th>
-                                  <th style={thStyle}>Kg Prod.</th>
-                                  <th style={thStyle}>Kg Falt.</th>
-                                  <th style={thStyle}>Rollos</th>
-                                  <th style={thStyle}>Acc.</th>
-                                </tr>
-                              </thead>
+             
+                      <tr className={opExpandida === op.id ? 'op-expansion' : ''}>
+                        <td colSpan={14} className="p-0">
+                          <div style={{
+                            margin: '8px 12px',
+                            background: '#fffdf0',
+                            border: '2px solid #ffc107',
+                            borderRadius: 8,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                            position: 'relative',
+                            zIndex: 20,
+                            maxWidth: '70%'
+                          }}>
+                            <div className="px-3 py-2 border-bottom border-warning d-flex justify-content-between align-items-center"
+                              style={{ background: '#fff8e1', borderRadius: '6px 6px 0 0' }}>
+                              <div className="d-flex gap-2 align-items-center">
+                                <Button size="sm" variant="warning" style={btnStyle}
+                                  onClick={() => { setOpIdParaProduccion(op.id); setShowProduccionModal(true) }}>
+                                  <i className="fas fa-plus me-1"></i>Agregar Extrusora
+                                </Button>
+                                
+                              </div>
+                              <span style={{ fontSize: 'clamp(10px,1.1vw,12px)', color: '#555' }}>
+                                Turnos NP #{op.id}
+                              </span>
+                            </div>
+                            <div className="px-3 py-2" style={{ overflowX: 'auto' }}>
+                              <Table size="sm" hover className="mb-0 bg-white" style={{ minWidth: 600 }}>
+
+                              
                               <tbody>
                                 {(producciones[op.id] || []).length === 0 ? (
                                   <tr><td colSpan={10} className="text-center text-muted py-2 small">Sin turnos registrados</td></tr>
@@ -362,30 +366,33 @@ export default function ProduccionPage() {
                                     const kgFaltantes = Math.max(op.kilos - kgAcumulado, 0)
                                     return (
                                       <React.Fragment key={prod.id}>
-                                        <tr style={{ cursor: 'pointer' }}
-                                          onMouseEnter={() => setHoveredProd(prod.id)}
-                                          onMouseLeave={() => setHoveredProd(null)}>
+                                       <tr style={{ 
+                                            cursor: 'pointer',
+                                            display: produccionExpandida && produccionExpandida !== prod.id ? 'none' : ''
+                                          }}
+                                            onMouseEnter={() => setHoveredProd(prod.id)}
+                                            onMouseLeave={() => setHoveredProd(null)}>
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
                                             <i className={`fas fa-chevron-${produccionExpandida === prod.id ? 'down' : 'right'} text-muted`}></i>
                                           </td>
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{prod.maquina?.nombre || '—'}</td>
-                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{formatFecha(prod.fecha)}</td>
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
-                                            <Badge bg="secondary" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>{prod.turno}</Badge>
+                                            <Badge bg="secondary" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>T. {prod.turno}</Badge>
                                           </td>
-                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{prod.lote}</td>
-                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{prod.usuario?.nombre || '—'}</td>
+                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{formatFecha(prod.fecha)}</td>
+                                          
+                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>Lote {prod.lote}</td>
+                                          
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
                                             <span className="text-success fw-bold">{prod.kg_producidos}kg</span>
                                           </td>
-                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
-                                            <span className={kgFaltantes > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{kgFaltantes}kg</span>
-                                          </td>
+                                         
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
                                             <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
-                                              {(detalles[prod.id] || []).length}
+                                              {(detalles[prod.id] || []).length} Rollos
                                             </Badge>
                                           </td>
+                                          <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}><i class="fa fa-user"></i> {prod.usuario?.nombre || '—'}</td>
                                           <td style={tdStyle}>
                                             <Button size="sm" variant="outline-danger" style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
                                               onClick={() => handleEliminarProduccion(prod.id, op.id)}>
@@ -398,54 +405,67 @@ export default function ProduccionPage() {
                                         {produccionExpandida === prod.id && (
                                           <tr>
                                             <td colSpan={10} className="p-0">
-                                              <div className="bg-white px-3 py-2 border-start border-4 border-info">
-                                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                                  <strong style={{ fontSize: 'clamp(11px,1.2vw,13px)' }}>
-                                                    <i className="fas fa-list me-2 text-info"></i>
-                                                    Rollos — próximo #{String(getProximoRollo(op.id)).padStart(3, '0')}
-                                                  </strong>
-                                                  <Button size="sm" variant="info" style={btnStyle}
-                                                    onClick={() => { setProduccionIdParaDetalle(prod.id); setShowDetalleModal(true) }}>
-                                                    <i className="fas fa-plus me-1"></i>Agregar rollo
-                                                  </Button>
+                                              <div style={{
+                                                margin: '8px 16px',
+                                                background: 'white',
+                                                border: '2px solid #0dcaf0',
+                                                borderRadius: 8,
+                                                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                                                position: 'relative',
+                                                zIndex: 30,
+                                                display: 'inline-block',
+                                                minWidth: 320,
+                                                maxWidth: 420
+                                              }}>
+                                          <div className="px-3 py-2 border-bottom border-info d-flex justify-content-between align-items-center"
+                                                        style={{ background: '#f0fbff', borderRadius: '6px 6px 0 0' }}>
+                                                        <Button size="sm" variant="info" style={btnStyle}
+                                                          onClick={() => { setProduccionIdParaDetalle(prod.id); setShowDetalleModal(true) }}>
+                                                          <i className="fas fa-plus me-1"></i>Agregar rollo
+                                                        </Button>
+                                                        <span style={{ fontSize: 'clamp(10px,1.1vw,12px)', color: '#555' }}>
+                                                          Próximo #{String(getProximoRollo(op.id)).padStart(3, '0')}
+                                                        </span>
+                                                      </div>
+
+                                                <div className="px-3 py-2">
+                                                  {(detalles[prod.id] || []).length === 0 ? (
+                                                    <div className="text-center text-muted py-2 small">
+                                                      <i className="fas fa-inbox me-2"></i>Sin rollos
+                                                    </div>
+                                                  ) : (
+                                                    <Table size="sm" hover className="mb-0">
+                                                     
+                                                      <tbody>
+                                                        {(detalles[prod.id] || []).map(det => (
+                                                          <tr key={det.id}>
+                                                            <td style={tdStyle}>
+                                                              <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
+                                                                #{String(det.numero_rollo).padStart(3, '0')}
+                                                              </Badge>
+                                                            </td>
+                                                            <td style={tdStyle}><strong>{det.kg}kg</strong></td>
+                                                            <td style={tdStyle}>
+                                                              <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
+                                                                onClick={() => handleVerEtiqueta(det, prod, op)}>
+                                                                <i className="fas fa-tag"></i>
+                                                              </Button>
+                                                              <Button size="sm" variant="outline-danger" style={btnStyle}
+                                                                onClick={() => handleEliminarDetalle(det.id, prod.id)}>
+                                                                <i className="fas fa-trash"></i>
+                                                              </Button>
+                                                            </td>
+                                                          </tr>
+                                                        ))}
+                                                      </tbody>
+                                                    </Table>
+                                                  )}
                                                 </div>
-                                                <Table size="sm" hover className="mb-0" style={{ maxWidth: 400 }}>
-                                                  <thead className="table-info">
-                                                    <tr>
-                                                      <th style={thStyle}>N° Rollo</th>
-                                                      <th style={thStyle}>Kg</th>
-                                                      <th style={thStyle}>Acc.</th>
-                                                    </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    {(detalles[prod.id] || []).length === 0 ? (
-                                                      <tr><td colSpan={3} className="text-center text-muted py-2 small">Sin rollos</td></tr>
-                                                    ) : (detalles[prod.id] || []).map(det => (
-                                                      <tr key={det.id}>
-                                                        <td style={tdStyle}>
-                                                          <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
-                                                            #{String(det.numero_rollo).padStart(3, '0')}
-                                                          </Badge>
-                                                        </td>
-                                                        <td style={tdStyle}><strong>{det.kg}kg</strong></td>
-                                                        <td style={tdStyle}>
-                                                          <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
-                                                            onClick={() => handleVerEtiqueta(det, prod, op)}>
-                                                            <i className="fas fa-tag"></i>
-                                                          </Button>
-                                                          <Button size="sm" variant="outline-danger" style={btnStyle}
-                                                            onClick={() => handleEliminarDetalle(det.id, prod.id)}>
-                                                            <i className="fas fa-trash"></i>
-                                                          </Button>
-                                                        </td>
-                                                      </tr>
-                                                    ))}
-                                                  </tbody>
-                                                </Table>
                                               </div>
                                             </td>
                                           </tr>
                                         )}
+
                                       </React.Fragment>
                                     )
                                   })
@@ -513,6 +533,35 @@ export default function ProduccionPage() {
           getDetalles={getDetalles}
         />
       )}
+      
+      <style>{`
+        .op-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.55);
+          z-index: 10;
+          transition: opacity 0.3s;
+        }
+        .op-row-activa {
+          position: relative;
+          z-index: 20;
+          background: white !important;
+        }
+        .op-row-activa td {
+          background: white !important;
+        }
+        .op-expansion {
+          position: relative;
+          z-index: 20;
+          background: white !important;
+        }
+        .op-expansion > td {
+          background: white !important;
+        }
+        .table-wrapper {
+          position: relative;
+        }
+      `}</style>
     </Container>
   )
 }

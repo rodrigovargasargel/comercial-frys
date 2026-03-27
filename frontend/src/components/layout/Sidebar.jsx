@@ -20,6 +20,13 @@ export default function Sidebar() {
 
   const menuOperario = [
     { path: '/produccion-extrusora', icon: 'fa-industry', label: 'Producción Extrusora' },
+    { path: '/produccion-selladora', icon: 'fa-cut', label: 'Producción Selladora' },
+     { path: '/maquinas', icon: 'fa-robot', label: 'Maquinas' },
+    { path: '/usuarios', icon: 'fa-users', label: 'Usuarios' },
+    { path: '/productos', icon: 'fa-cubes', label: 'Productos' },
+    { path: '/empresas', icon: 'fa-building', label: 'Empresas' },
+    { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
+    { path: '/colores', icon: 'fa-palette', label: 'Colores' },
   ]
 
   const menu = usuario?.perfil_id === 3 ? menuOperario : menuCompleto
