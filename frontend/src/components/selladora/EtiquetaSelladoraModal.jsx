@@ -7,30 +7,30 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
 
   if (!detalle || !produccion || !op) return null
 
-  const densidad = op.densidad === 'alta' ? 'A/D' : 'B/D'
+      const densidad = detalle.densidad_extrusora === 'alta' ? 'A/D' : detalle.densidad_extrusora === 'baja' ? 'B/D' : '—'
 
-  const fechaElaboracion = produccion.fecha
-    ? produccion.fecha.split('-').reverse().join('-')
-    : ''
+    const fechaElaboracion = detalle.fecha_extrusora
+      ? detalle.fecha_extrusora.split('-').reverse().join('-')
+      : ''
 
-  const fechaVencimiento = (() => {
-    if (!produccion.fecha) return ''
-    const d = new Date(produccion.fecha)
-    d.setFullYear(d.getFullYear() + 1)
-    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`
-  })()
+    const fechaVencimiento = (() => {
+      if (!detalle.fecha_extrusora) return ''
+      const d = new Date(detalle.fecha_extrusora)
+      d.setFullYear(d.getFullYear() + 1)
+      return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`
+    })()
 
   const qrData = JSON.stringify({
-    producto: op.producto?.nombre,
-    color: op.color?.nombre,
-    densidad,
-    ancho: op.ancho,
-    largo: op.largo,
-    espesor: op.espesor,
-    unidades: detalle.q_unidades_por_paquete,
-    lote: produccion.lote,
-    fecha: fechaElaboracion
-  })
+  producto: op.producto?.nombre,
+  color: op.color?.nombre,
+  densidad: detalle.densidad_extrusora,
+  ancho: op.ancho,
+  largo: op.largo,
+  espesor: op.espesor,
+  unidades: detalle.q_unidades_por_paquete,
+  lote: detalle.lote_extrusora,
+  fecha: fechaElaboracion
+})
 
   const handlePrint = () => {
     const contenido = printRef.current.innerHTML

@@ -7,7 +7,20 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
 
   if (!detalle || !produccion || !op) return null
 
-  const barcodeValue = `${op.id}-${String(detalle.numero_rollo).padStart(3, '0')}-${produccion.lote}`
+ 
+  const qrData = JSON.stringify({
+  op: op.id,
+  rollo: String(detalle.numero_rollo).padStart(3, '0'),
+  lote: produccion.lote,
+  fecha: produccion.fecha,
+  turno: produccion.turno,
+  producto: op.producto?.nombre,
+  color: op.color?.nombre,
+  densidad: op.densidad,
+  ancho: op.ancho,
+  espesor: op.espesor,
+  kg: detalle.kg
+})
 
   const handlePrint = () => {
   const contenido = printRef.current.innerHTML
@@ -28,7 +41,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
       </Modal.Header>
       <Modal.Body className="d-flex justify-content-center py-4">
         <div ref={printRef}>
-          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 0,  border: '2px solid black', padding: 1, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+          <div className="etiqueta" style={{ width: '7cm', height: '10cm', margin: 10,  border: '2px solid black', padding: 30, textAlign: 'center', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
             <div style={{ borderBottom: '1px solid black', paddingBottom: 1 }}>
               <div style={{ fontSize: 18, fontWeight: 'bold', letterSpacing: 2 }}>COMERCIAL FRYS</div>
             </div>
@@ -64,10 +77,10 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
                 {detalle.kg} KG
               </div>
             </div>
-
+            <p></p>
           
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <QRCodeSVG value={barcodeValue} size={90} />
+              <QRCodeSVG value={qrData} size={90} />
             </div>
 
           </div>

@@ -55,6 +55,21 @@ def obtener_op(op_id: int, db: Session = Depends(get_db)):
 def crear_op(data: OrdenProduccionCreate, db: Session = Depends(get_db)):
     return produccion_service.create_op(db, data)
 
+#Editar turno extrusora
+@router.put("/producciones/{produccion_id}", response_model=ProduccionExtrusoraOut)
+def actualizar_produccion(produccion_id: int, data: dict, db: Session = Depends(get_db)):
+    from app.models.produccion import ProduccionExtrusora
+    prod = db.query(ProduccionExtrusora).filter(ProduccionExtrusora.id == produccion_id).first()
+    if not prod:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    for field in ['maquina_id', 'turno', 'lote', 'usuario_id']:
+        if field in data:
+            setattr(prod, field, data[field])
+    db.commit()
+    db.refresh(prod)
+    return produccion_service._enrich_produccion(db, prod)
+
+
 @router.put("/ops/{op_id}", response_model=OrdenProduccionOut)
 def actualizar_op(op_id: int, data: OrdenProduccionUpdate, db: Session = Depends(get_db)):
     op = produccion_service.update_op(db, op_id, data)

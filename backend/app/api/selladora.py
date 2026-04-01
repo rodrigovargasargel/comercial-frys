@@ -56,7 +56,35 @@ def eliminar_produccion(prod_id: int, db: Session = Depends(get_db)):
 
 @router.get("/producciones/{prod_id}/detalles", response_model=List[ProduccionSelladoraDetalleOut])
 def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
-    return selladora_service.get_detalles_by_produccion(db, prod_id)
+    from app.models.produccion import OrdenProduccion
+    detalles = selladora_service.get_detalles_by_produccion(db, prod_id)
+    result = []
+    for d in detalles:
+        lote = None
+        fecha = None
+        densidad = None
+        if d.detalle_extrusora and d.detalle_extrusora.produccion:
+            lote = d.detalle_extrusora.produccion.lote
+            fecha = d.detalle_extrusora.produccion.fecha
+            op_ext = db.query(OrdenProduccion).filter(
+                OrdenProduccion.id == d.detalle_extrusora.produccion.op_id
+            ).first()
+            if op_ext:
+                densidad = op_ext.densidad
+        result.append(ProduccionSelladoraDetalleOut(
+            id=d.id,
+            detalle_extrusora_id=d.detalle_extrusora_id,
+            q_paquetes=d.q_paquetes,
+            q_unidades_por_paquete=d.q_unidades_por_paquete,
+            unidades=d.unidades,
+            kilos=d.kilos,
+            numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
+            lote_extrusora=lote,
+            fecha_extrusora=fecha,
+            densidad_extrusora=densidad,
+            created_at=d.created_at
+        ))
+    return result
 
 @router.get("/rollos-disponibles", response_model=List[DetalleExtrusoraDisponible])
 def rollos_disponibles(color_id: int, ancho: float, espesor: float, db: Session = Depends(get_db)):

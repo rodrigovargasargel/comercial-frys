@@ -16,3 +16,5 @@ export const deleteDetalle = (id) => API.delete(`/produccion/detalles/${id}`)
 
 export const getColores = () => API.get('/produccion/colores')
 export const getProductosExtrusora = () => API.get('/produccion/productos-extrusora')
+
+export const updateProduccion = (id, data) => API.put(`/produccion/producciones/${id}`, data)

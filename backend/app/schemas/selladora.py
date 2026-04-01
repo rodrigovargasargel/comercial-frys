@@ -100,6 +100,8 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     kilos: float
     numero_rollo: int = 0
     lote_extrusora: Optional[str] = None
+    fecha_extrusora: Optional[date] = None
+    densidad_extrusora: Optional[str] = None
     created_at: Optional[datetime] = None
     class Config:
-        from_attributes = True        
+        from_attributes = True      

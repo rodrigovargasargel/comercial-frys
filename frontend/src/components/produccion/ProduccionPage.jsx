@@ -17,6 +17,21 @@ import {
 } from '../../api/produccion'
 import { getMaquinas, getEmpresas, getUsuarios } from '../../api/selects'
 
+import EditarProduccionModal from './EditarProduccionModal'
+import { updateProduccion } from '../../api/produccion'
+
+const handleEditarProduccion = async (prodId, data) => {
+  try {
+    await updateProduccion(prodId, data)
+    setShowEditarProd(false)
+    setProduccionAEditar(null)
+    const { data: updated } = await getProducciones(opExpandida)
+    setProducciones(prev => ({ ...prev, [opExpandida]: updated }))
+  } catch (e) {
+    setError(e.response?.data?.detail || 'Error al editar turno')
+  }
+}
+
 const estadoBadge = {
   pendiente: 'secondary',
   en_produccion: 'warning',
@@ -61,6 +76,8 @@ export default function ProduccionPage() {
   const [produccionIdParaDetalle, setProduccionIdParaDetalle] = useState(null)
   const [showEtiqueta, setShowEtiqueta] = useState(false)
   const [etiquetaData, setEtiquetaData] = useState({ detalle: null, produccion: null, op: null })
+  const [showEditarProd, setShowEditarProd] = useState(false)
+  const [produccionAEditar, setProduccionAEditar] = useState(null)
 
   const cargarDatos = async () => {
     try {
@@ -394,7 +411,12 @@ export default function ProduccionPage() {
                                           </td>
                                           <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}><i class="fa fa-user"></i> {prod.usuario?.nombre || '—'}</td>
                                           <td style={tdStyle}>
-                                            <Button size="sm" variant="outline-danger" style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                            <Button size="sm" variant="outline-dark" className="me-1" title="Editar"
+                                                style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                                onClick={() => { setProduccionAEditar(prod); setShowEditarProd(true) }}>
+                                                <i className="fas fa-edit"></i>
+                                              </Button>
+                                            <Button size="sm" variant="outline-danger"  title="Eliminar" style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
                                               onClick={() => handleEliminarProduccion(prod.id, op.id)}>
                                               <i className="fas fa-trash"></i>
                                             </Button>
@@ -441,16 +463,16 @@ export default function ProduccionPage() {
                                                           <tr key={det.id}>
                                                             <td style={tdStyle}>
                                                               <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
-                                                                #{String(det.numero_rollo).padStart(3, '0')}
+                                                                Rollo #{String(det.numero_rollo).padStart(3, '0')}
                                                               </Badge>
                                                             </td>
                                                             <td style={tdStyle}><strong>{det.kg}kg</strong></td>
                                                             <td style={tdStyle}>
-                                                              <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
+                                                              <Button size="sm"  title="Ver Etiqueta" variant="outline-info" className="me-1" style={btnStyle}
                                                                 onClick={() => handleVerEtiqueta(det, prod, op)}>
                                                                 <i className="fas fa-tag"></i>
                                                               </Button>
-                                                              <Button size="sm" variant="outline-danger" style={btnStyle}
+                                                              <Button size="sm" title="Eliminar" variant="outline-danger" style={btnStyle}
                                                                 onClick={() => handleEliminarDetalle(det.id, prod.id)}>
                                                                 <i className="fas fa-trash"></i>
                                                               </Button>
@@ -562,6 +584,17 @@ export default function ProduccionPage() {
           position: relative;
         }
       `}</style>
+
+
+
+      <EditarProduccionModal
+        show={showEditarProd}
+        onHide={() => { setShowEditarProd(false); setProduccionAEditar(null) }}
+        onSave={handleEditarProduccion}
+        produccion={produccionAEditar}
+        maquinas={maquinas}
+        usuarios={usuarios}
+      />
     </Container>
   )
 }
