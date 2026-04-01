@@ -112,8 +112,11 @@ def eliminar_detalle(detalle_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     
 #excel con formato bonito
+
 @router.post("/ops/{op_id}/packing")
+
 def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
+    from datetime import date as date_type
     op = produccion_service.get_op_by_id(db, op_id)
     if not op:
         raise HTTPException(status_code=404, detail="OP no encontrada")
@@ -144,9 +147,12 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     fecha_str = hoy.strftime('%d/%m/%Y')
 
     # Nº
+
+    hoy = date_type.today()
+    numero_packing = f"{hoy.strftime('%d%m%y')}{op_id}" 
     ws['G2'] = 'Nº :'
     ws['G2'].font = Font(bold=True, size=10, color='1F3864')
-    ws['I2'] = int(fact) if str(fact).isdigit() else fact
+    ws['I2'] = numero_packing
     ws['I2'].font = Font(bold=True, size=12, color='1F3864')
     ws['I2'].alignment = Alignment(horizontal='center')
 
@@ -197,8 +203,8 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws['D18'].font = Font(size=10)
 
     # Encabezado tabla
-    headers = [('B','FACT'),('C','FECHA'),('D','COD'),('E','NOMBRE PRODUCTO'),
-               ('F','LOTE'),('G','FECHA PROD.'),('H','ROLLO'),('I','KG')]
+    headers = [('B','FACT'),('C','FECHA'),('D',''),('E','NOMBRE PRODUCTO'),
+           ('F','LOTE'),('G','FECHA PROD.'),('H','ROLLO'),('I','KG')]
     HEADER_ROW = 21
     ws.row_dimensions[HEADER_ROW].height = 18
     for col, h in headers:
@@ -210,7 +216,9 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         c.alignment = Alignment(horizontal='center', vertical='center')
 
     # Datos
-    nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {op.densidad}"
+    #nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {op.densidad}"
+    densidad_str = 'AD' if op.densidad == 'alta' else 'BD'
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {densidad_str}"
     DATA_START = HEADER_ROW + 1
     fila = DATA_START
     primera = True

@@ -9,7 +9,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
 
  
   const qrData = JSON.stringify({
-  op: op.id,
+  np: op.id,
   rollo: String(detalle.numero_rollo).padStart(3, '0'),
   lote: produccion.lote,
   fecha: produccion.fecha,

@@ -17,3 +17,5 @@ export const deleteDetalleSelladora = (id) => API.delete(`/selladora/detalles/${
 export const getMaquinasSelladoras = () => API.get('/selladora/maquinas-selladoras')
 export const getRollosDisponibles = (color_id, ancho, espesor) =>
   API.get('/selladora/rollos-disponibles', { params: { color_id, ancho, espesor } })
+
+export const getProductosSelladora = () => API.get('/selladora/productos-selladora')

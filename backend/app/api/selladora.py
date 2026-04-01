@@ -110,3 +110,12 @@ def crear_detalle(data: ProduccionSelladoraDetalleCreate, db: Session = Depends(
 def eliminar_detalle(detalle_id: int, db: Session = Depends(get_db)):
     if not selladora_service.delete_detalle(db, detalle_id):
         raise HTTPException(status_code=404, detail="No encontrado")
+
+@router.get("/productos-selladora")
+def listar_productos_selladora(db: Session = Depends(get_db)):
+    from app.models.producto import Producto
+    from app.models.maquina import TipoMaquina
+    tipo = db.query(TipoMaquina).filter(TipoMaquina.nombre == "Selladora").first()
+    if not tipo:
+        return []
+    return db.query(Producto).filter(Producto.tipo_maquina_id == tipo.id).all()        

@@ -8,7 +8,7 @@ import {
   getOPsSelladora, createOPSelladora, updateOPSelladora, deleteOPSelladora,
   getProduccionesSelladora, createProduccionSelladora, deleteProduccionSelladora,
   getDetallesSelladora, createDetalleSelladora, deleteDetalleSelladora,
-  getMaquinasSelladoras
+  getMaquinasSelladoras,getProductosSelladora 
 } from '../../api/selladora'
 import { getEmpresas } from '../../api/selects'
 import { getColores } from '../../api/produccion'
@@ -57,18 +57,17 @@ const [etiquetaSelladoraData, setEtiquetaSelladoraData] = useState({ detalle: nu
   const cargarDatos = async () => {
     try {
       setLoading(true)
-      const [opsRes, empRes, colRes, maqRes] = await Promise.all([
-        getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras()
-      ])
-      setOps(opsRes.data)
-      setEmpresas(empRes.data)
-      setColores(colRes.data)
-      setMaquinas(maqRes.data)
+      const [opsRes, empRes, colRes, maqRes, prodRes] = await Promise.all([
+          getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras(), getProductosSelladora()
+        ])
+        setOps(opsRes.data)
+        setEmpresas(empRes.data)
+        setColores(colRes.data)
+        setMaquinas(maqRes.data)
+        setProductos(prodRes.data)
 
       // Cargar productos para el modal
-      const { default: axios } = await import('axios')
-      const prodRes = await axios.get(`${import.meta.env.VITE_API_URL}/productos/`)
-      setProductos(prodRes.data)
+      
     } catch {
       setError('Error al cargar datos')
     } finally {

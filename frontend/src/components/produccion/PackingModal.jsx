@@ -66,7 +66,7 @@ export default function PackingModal({ show, onHide, op, empresas, producciones,
       <Modal.Header closeButton className="bg-dark text-white">
         <Modal.Title>
           <i className="fas fa-truck me-2"></i>
-          Generar Packing List — OP #{op?.id}
+          Generar Packing List — NP #{op?.id}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -102,7 +102,7 @@ export default function PackingModal({ show, onHide, op, empresas, producciones,
                 name="fact"
                 value={form.fact}
                 onChange={handleChange}
-                placeholder="41064"
+                placeholder=""
               />
             </Form.Group>
           </Col>
