@@ -21,6 +21,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
     })()
 
   const qrData = JSON.stringify({
+  empresa: "Comercial Frys Ltda." , 
   producto: op.producto?.nombre,
   color: op.color?.nombre,
   densidad: detalle.densidad_extrusora,

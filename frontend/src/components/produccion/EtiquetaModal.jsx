@@ -9,6 +9,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
 
  
   const qrData = JSON.stringify({
+  Empresa: "Comercial Frys Ltda"  ,
   np: op.id,
   rollo: String(detalle.numero_rollo).padStart(3, '0'),
   lote: produccion.lote,

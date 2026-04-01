@@ -149,7 +149,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     # Nº
 
     hoy = date_type.today()
-    numero_packing = f"{hoy.strftime('%d%m%y')}{op_id}" 
+    numero_packing = f"{hoy.strftime('%d%m%y')}-{op_id}" 
     ws['G2'] = 'Nº :'
     ws['G2'].font = Font(bold=True, size=10, color='1F3864')
     ws['I2'] = numero_packing
@@ -160,7 +160,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     empresa_rows = [
         (4, 'COMERCIALIZADORA Y DISTRIBUIDORA FRYS LTDA', True, 12),
         (5, 'RUT : 76386703-K', False, 10),
-        (6, 'PJE NUEVO 17 , N° 242 V VOLCANES', False, 10),
+        (6, 'CAMINO TEPUAL km 3 , PARQUE APIASMONT PARCELA 9', False, 10),
         (7, 'PUERTO MONTT - CHILE', False, 10),
         (8, 'TEL (065) 2713834 - (09) 96797817', False, 10),
         (9, 'GIRO : COMERCIALIZACION DE INSUMOS Y PRODUCTOS INDUSTRIALES', False, 10),
@@ -193,9 +193,16 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws['D16'].font = Font(bold=True, size=11)
     ws['G16'] = 'FECHA/DATE :'
     ws['G16'].font = Font(bold=True, size=10, color='1F3864')
+    ws['G18'] = 'NOTA PEDIDO :'
+    ws['G18'].font = Font(bold=True, size=10, color='1F3864')
     ws['I16'] = fecha_str
     ws['I16'].font = Font(size=10)
     ws['I16'].alignment = Alignment(horizontal='center')
+
+    ws['I18'] = op_id
+    ws['I18'].font = Font(size=10)
+    ws['I18'].alignment = Alignment(horizontal='center')
+
 
     ws['B18'] = 'REF. :'
     ws['B18'].font = Font(bold=True, size=10, color='1F3864')
@@ -218,7 +225,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     # Datos
     #nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {op.densidad}"
     densidad_str = 'AD' if op.densidad == 'alta' else 'BD'
-    nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {densidad_str}"
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} "
     DATA_START = HEADER_ROW + 1
     fila = DATA_START
     primera = True
