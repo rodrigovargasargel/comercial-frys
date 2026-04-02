@@ -120,5 +120,5 @@ def listar_productos_selladora(db: Session = Depends(get_db)):
         return []
     return db.query(Producto).filter(
     Producto.tipo_maquina_id == tipo.id,
-    Producto.id <= 10
+    Producto.id <= 15
 ).all()     

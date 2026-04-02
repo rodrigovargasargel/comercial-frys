@@ -102,7 +102,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 <div style={{ borderTop: '1px solid black', paddingTop: 4, fontSize: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span><strong>Elab:</strong> {fechaElaboracion}</span>
-                    <span><strong>Venc:</strong> {fechaVencimiento}</span>
+                    <span><strong>Vence:</strong> {fechaVencimiento}</span>
                 </div>
                 <div style={{ marginTop: 2 }}>
                 <strong>Lote:</strong> {detalle.lote_extrusora || produccion.lote}
