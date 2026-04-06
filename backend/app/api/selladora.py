@@ -12,6 +12,13 @@ from app.services import selladora_service
 from app.models.maquina import Maquina, TipoMaquina
 from app.schemas.materia_prima import MPTipoOut
 
+from fastapi.responses import StreamingResponse
+import io
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+from datetime import date as date_type
+
 router = APIRouter(prefix="/selladora", tags=["Selladora"])
 
 @router.get("/maquinas-selladoras")
@@ -122,3 +129,196 @@ def listar_productos_selladora(db: Session = Depends(get_db)):
     Producto.tipo_maquina_id == tipo.id,
     Producto.id <= 15
 ).all()     
+
+@router.post("/ops/{op_id}/trazabilidad")
+def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
+    from app.models.produccion import OrdenProduccion, ProduccionExtrusora, DetalleProduccionExtrusora
+    from app.models.selladora import ProduccionSelladoraDetalle
+
+    op = selladora_service.get_op_by_id(db, op_id)
+    if not op:
+        raise HTTPException(status_code=404, detail="OP no encontrada")
+
+    cliente = body.get('cliente', '')
+    nro_guia = body.get('nro_guia', '')
+
+    # Obtener todos los detalles de selladora de esta OP
+    prods = selladora_service.get_producciones_by_op(db, op_id)
+    
+    thin = Side(style='thin')
+    medium = Side(style='medium')
+    border_full = Border(left=thin, right=thin, top=thin, bottom=thin)
+    header_fill = PatternFill('solid', fgColor='1F3864')
+    subheader_fill = PatternFill('solid', fgColor='2E75B6')
+    row_fill_alt = PatternFill('solid', fgColor='EBF3FB')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = str(op_id)
+
+    # Anchos columnas A-K
+    anchos = [8, 14, 10, 28, 14, 14, 12, 14, 10, 10, 12]
+    for i, w in enumerate(anchos, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    hoy = date_type.today()
+    fecha_str = hoy.strftime('%d/%m/%Y')
+
+    # Nº
+    ws['H2'] = 'Nº :'
+    ws['H2'].font = Font(bold=True, size=10, color='1F3864')
+    ws['I2'] = op_id
+    ws['I2'].font = Font(bold=True, size=12, color='1F3864')
+    ws['I2'].alignment = Alignment(horizontal='center')
+
+    # Empresa
+    empresa_rows = [
+        (4, 'COMERCIALIZADORA Y DISTRIBUIDORA FRYS LTDA', True, 12),
+        (5, 'RUT : 76386703-K', False, 10),
+        (6, 'CAM TEPUAL KM 3 P APIAS MONTT P-9', False, 10),
+        (7, 'PUERTO MONTT - CHILE', False, 10),
+        (8, 'TEL (065) 2254554 - (09) 96797817', False, 10),
+        (9, 'GIRO : COMERCIALIZACION DE INSUMOS Y PRODUCTOS INDUSTRIALES', False, 10),
+        (10, 'rmolina@comercialfrys.cl', False, 10),
+    ]
+    for row, val, bold, size in empresa_rows:
+        c = ws[f'A{row}']
+        c.value = val
+        c.font = Font(bold=bold, size=size, color='1F3864')
+
+    # Título TRAZABILIDAD
+    ws.merge_cells('A12:J12')
+    c = ws['A12']
+    c.value = 'TRAZABILIDAD'
+    c.font = Font(bold=True, size=22, color='FFFFFF')
+    c.alignment = Alignment(horizontal='center', vertical='center')
+    c.fill = header_fill
+    ws.row_dimensions[12].height = 22
+
+    # A/TO y FECHA
+    ws['A13'] = 'A/TO :'
+    ws['A13'].font = Font(bold=True, size=10, color='1F3864')
+    ws['C13'] = cliente.upper()
+    ws['C13'].font = Font(bold=True, size=11)
+    ws['H13'] = 'FECHA/DATE :'
+    ws['H13'].font = Font(bold=True, size=10, color='1F3864')
+    ws['J13'] = fecha_str
+    ws['J13'].font = Font(size=10)
+    ws['J13'].alignment = Alignment(horizontal='center')
+
+    # Recopilar lotes únicos de los rollos usados
+    lotes = set()
+    for prod in prods:
+        dets = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id).all()
+        for d in dets:
+            if d.detalle_extrusora and d.detalle_extrusora.produccion:
+                lotes.add(str(d.detalle_extrusora.produccion.lote))
+
+    ws['A14'] = 'ORDEN PEDIDO MP :'
+    ws['A14'].font = Font(bold=True, size=10, color='1F3864')
+    ws['C14'] = ' '.join(sorted(lotes))
+    ws['C14'].font = Font(size=10)
+
+    ws['A15'] = 'PEDIDO  MEDRED GUIA'
+    ws['A15'].font = Font(bold=True, size=10, color='1F3864')
+    ws['C15'] = nro_guia
+    ws['C15'].font = Font(bold=True, size=10)
+
+    # Encabezado tabla — sin COD ni PROVEEDOR
+    HEADER_ROW = 16
+    headers = [
+        ('A','GUIA'), ('B','FECHA'), ('D','NOMBRE PRODUCTO'),
+        ('F','F. FABRICACIÓN'), ('G','LOTE'), ('H','F. VENCIMIENTO'),
+        ('I','N° PQTE'), ('J','UNID'), ('K','T. UNID')
+    ]
+    ws.row_dimensions[HEADER_ROW].height = 16
+    for col, h in headers:
+        c = ws[f'{col}{HEADER_ROW}']
+        c.value = h
+        c.font = Font(bold=True, size=10, color='FFFFFF')
+        c.fill = subheader_fill
+        c.border = border_full
+        c.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Nombre producto
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.largo}x{op.espesor}"
+
+    DATA_START = HEADER_ROW + 1
+    fila = DATA_START
+
+    for prod in prods:
+        dets = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id)\
+            .all()
+        for d in dets:
+            fill = PatternFill('solid', fgColor='FFFFFF') if fila % 2 == 0 else row_fill_alt
+            ws.row_dimensions[fila].height = 15
+
+            # Fechas desde el rollo de extrusora
+            fecha_fab = ''
+            fecha_venc = ''
+            lote_rollo = ''
+            if d.detalle_extrusora and d.detalle_extrusora.produccion:
+                fecha_prod = d.detalle_extrusora.produccion.fecha
+                if fecha_prod:
+                    fecha_fab = fecha_prod.strftime('%d/%m/%Y')
+                    from datetime import timedelta
+                    fecha_venc_dt = date_type(fecha_prod.year + 1, fecha_prod.month, fecha_prod.day)
+                    fecha_venc = fecha_venc_dt.strftime('%d/%m/%Y')
+                lote_rollo = str(d.detalle_extrusora.produccion.lote)
+
+            valores = [
+                ('A', nro_guia),
+                ('B', fecha_str),
+                ('D', nombre_producto),
+                ('F', fecha_fab),
+                ('G', lote_rollo),
+                ('H', fecha_venc),
+                ('I', d.q_paquetes),
+                ('J', d.q_unidades_por_paquete),
+                ('K', f'=J{fila}*I{fila}'),
+            ]
+            for col, val in valores:
+                c = ws[f'{col}{fila}']
+                c.value = val
+                c.font = Font(size=10)
+                c.border = border_full
+                c.fill = fill
+                if col in ('I', 'J', 'K'):
+                    c.alignment = Alignment(horizontal='center')
+            fila += 1
+
+    # Total
+    total_row = fila
+    ws.row_dimensions[total_row].height = 16
+    ws.merge_cells(f'A{total_row}:J{total_row}')
+    c = ws[f'A{total_row}']
+    c.value = 'TOTAL'
+    c.font = Font(bold=True, size=11, color='FFFFFF')
+    c.fill = header_fill
+    c.alignment = Alignment(horizontal='right', vertical='center')
+    c.border = border_full
+    tc = ws[f'K{total_row}']
+    tc.value = f'=SUM(K{DATA_START}:K{fila-1})'
+    tc.font = Font(bold=True, size=11, color='FFFFFF')
+    tc.fill = header_fill
+    tc.border = border_full
+    tc.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Firma
+    firma_row = total_row + 4
+    for i, linea in enumerate(['Renzo Molina E.', 'Dpto. Comercial', 'F : 09-96797817', 'rmolina@comercialfrys.cl']):
+        c = ws[f'D{firma_row+i}']
+        c.value = linea
+        c.font = Font(size=10, color='1F3864', italic=(i > 0))
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"Trazabilidad-OP{op_id}-{cliente}.xlsx"
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )

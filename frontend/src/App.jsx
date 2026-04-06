@@ -10,7 +10,7 @@ import MaquinasPage from './components/maquinas/MaquinasPage'
 import MateriaPrimaPage from './components/materia_prima/MateriaPrimaPage'
 import SelladoraPage from './components/selladora/SelladoraPage'
 import ColoresPage from './components/colores/ColoresPage'
-
+import ReporteSemanaPage from './components/reportes/ReporteSemanaPage'
 
 function RutaProtegida({ children, perfilesPermitidos }) {
   const { usuario } = useAuth()
@@ -32,42 +32,63 @@ function AppRoutes() {
           <Layout />
         </RutaProtegida>
       }>
-        <Route index element={
-          usuario?.perfil_id === 3
-            ? <Navigate to="/produccion-extrusora" replace />
-            : <Navigate to="/usuarios" replace />
-        } />
-        <Route path="usuarios" element={
-          <RutaProtegida perfilesPermitidos={[1, 2]}>
-            <UsuariosPage />
-          </RutaProtegida>
-        } />
-        <Route path="productos" element={
-          <RutaProtegida perfilesPermitidos={[1, 2]}>
-            <ProductosPage />
-          </RutaProtegida>
-        } />
-        <Route path="empresas" element={
-          <RutaProtegida perfilesPermitidos={[1, 2]}>
-            <EmpresasPage />
-          </RutaProtegida>
-        } />
-        <Route path="maquinas" element={
-          <RutaProtegida perfilesPermitidos={[1, 2]}>
-            <MaquinasPage />
-          </RutaProtegida>
-        } />
+        <Route index element={<Navigate to="/produccion-extrusora" replace />} />
+
         <Route path="produccion-extrusora" element={
           <RutaProtegida perfilesPermitidos={[1, 2, 3]}>
             <ProduccionPage />
           </RutaProtegida>
         } />
-        
+
+        <Route path="produccion-selladora" element={
+          <RutaProtegida perfilesPermitidos={[1, 2, 3]}>
+            <SelladoraPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="materia-prima" element={
+          <RutaProtegida perfilesPermitidos={[1, 2, 3]}>
+            <MateriaPrimaPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="colores" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <ColoresPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="usuarios" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <UsuariosPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="productos" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <ProductosPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="empresas" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <EmpresasPage />
+          </RutaProtegida>
+        } />
+
+        <Route path="maquinas" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <MaquinasPage />
+          </RutaProtegida>
+        } />
+
       </Route>
 
-      <Route path="/materia-prima" element={<MateriaPrimaPage />} />
-      <Route path="/produccion-selladora" element={<SelladoraPage />} />
-      <Route path="/colores" element={<ColoresPage />} />
+      <Route path="informe-produccion" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <ReporteSemanaPage />
+          </RutaProtegida>
+        } />
     </Routes>
   )
 }

@@ -8,10 +8,12 @@ import {
   getOPsSelladora, createOPSelladora, updateOPSelladora, deleteOPSelladora,
   getProduccionesSelladora, createProduccionSelladora, deleteProduccionSelladora,
   getDetallesSelladora, createDetalleSelladora, deleteDetalleSelladora,
-  getMaquinasSelladoras,getProductosSelladora 
+  getMaquinasSelladoras, getProductosSelladora
 } from '../../api/selladora'
 import { getEmpresas } from '../../api/selects'
 import { getColores } from '../../api/produccion'
+
+import GuiaSelladoraModal from './GuiaSelladoraModal'
 
 const estadoBadge = {
   pendiente: 'secondary', en_produccion: 'warning',
@@ -22,12 +24,13 @@ const estadoLabel = {
   completada: 'Completada', cancelada: 'Cancelada'
 }
 
+
+
 const formatFecha = (fecha) => {
   if (!fecha) return ''
   const [y, m, d] = fecha.split('-')
   return `${d}-${m}-${y}`
 }
-
 
 export default function SelladoraPage() {
   const [ops, setOps] = useState([])
@@ -51,23 +54,27 @@ export default function SelladoraPage() {
   const [showDetalleModal, setShowDetalleModal] = useState(false)
   const [prodIdParaDetalle, setProdIdParaDetalle] = useState(null)
   const [opParaDetalle, setOpParaDetalle] = useState(null)
-  const [showEtiquetaSelladora, setShowEtiquetaSelladora] = useState(false)
-const [etiquetaSelladoraData, setEtiquetaSelladoraData] = useState({ detalle: null, produccion: null, op: null })
+  const [showEtiqueta, setShowEtiqueta] = useState(false)
+  const [etiquetaData, setEtiquetaData] = useState({ detalle: null, produccion: null, op: null })
+
+  const [showGuia, setShowGuia] = useState(false)
+  const [opParaGuia, setOpParaGuia] = useState(null)
+
+  const thStyle = { fontSize: 'clamp(11px, 1.2vw, 13px)', whiteSpace: 'nowrap', padding: '6px 8px' }
+  const tdStyle = { fontSize: 'clamp(11px, 1.2vw, 13px)', padding: '5px 8px', whiteSpace: 'nowrap' }
+  const btnStyle = { padding: '2px 6px', fontSize: 'clamp(10px, 1vw, 12px)' }
 
   const cargarDatos = async () => {
     try {
       setLoading(true)
       const [opsRes, empRes, colRes, maqRes, prodRes] = await Promise.all([
-          getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras(), getProductosSelladora()
-        ])
-        setOps(opsRes.data)
-        setEmpresas(empRes.data)
-        setColores(colRes.data)
-        setMaquinas(maqRes.data)
-        setProductos(prodRes.data)
-
-      // Cargar productos para el modal
-      
+        getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras(), getProductosSelladora()
+      ])
+      setOps(opsRes.data)
+      setEmpresas(empRes.data)
+      setColores(colRes.data)
+      setMaquinas(maqRes.data)
+      setProductos(prodRes.data)
     } catch {
       setError('Error al cargar datos')
     } finally {
@@ -159,213 +166,264 @@ const [etiquetaSelladoraData, setEtiquetaSelladoraData] = useState({ detalle: nu
   }
 
   return (
-    <Container fluid className="py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
+    <Container fluid className="py-3 px-2 px-md-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0 fw-bold">
           <i className="fas fa-cut me-2"></i>
           Órdenes de Producción — Selladora
-        </h2>
-        <Button variant="dark" onClick={() => { setOpSeleccionada(null); setShowOPModal(true) }}>
-          <i className="fas fa-plus me-2"></i>Nueva OP
+        </h5>
+        <Button variant="dark" size="sm" onClick={() => { setOpSeleccionada(null); setShowOPModal(true) }}>
+          <i className="fas fa-plus me-1"></i>Nueva OP
         </Button>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+      {error && <Alert variant="danger" dismissible onClose={() => setError(null)} className="py-2 small">{error}</Alert>}
+
+      {opExpandida && (
+        <div className="op-overlay" onClick={() => setOpExpandida(null)} />
+      )}
 
       {loading ? (
         <div className="text-center py-5"><Spinner animation="border" variant="dark" /></div>
       ) : (
-        <Table hover responsive className="align-middle">
-          <thead className="table-dark">
-            <tr>
-              <th style={{ width: 40 }}></th>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Producto</th>
-              <th>Color</th>
-              <th>Ancho</th>
-              <th>Espesor</th>
-              <th>Largo</th>
-              <th>Unid. Pedidas</th>
-              <th>Unid. Producidas</th>
-              <th>Unid. Faltantes</th>
-              <th>Estado</th>
-              <th>Cliente</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ops.length === 0 ? (
+        <div style={{ overflowX: 'auto', position: 'relative' }}>
+          <Table hover className="align-middle mb-0" style={{ minWidth: 900 }}>
+            <thead className="table-dark">
               <tr>
-                <td colSpan={14} className="text-center text-muted py-5">
-                  <i className="fas fa-cut fa-2x mb-2 d-block"></i>
-                  No hay órdenes de producción
-                </td>
+                <th style={{ ...thStyle, width: 32 }}></th>
+                <th style={thStyle}>#</th>
+                <th style={thStyle}>Fecha</th>
+                <th style={thStyle}>Producto</th>
+                <th style={thStyle}>Color</th>
+                <th style={thStyle}>Ancho</th>
+                <th style={thStyle}>Esp.</th>
+                <th style={thStyle}>Largo</th>
+                <th style={thStyle}>Unid. Ped.</th>
+                <th style={thStyle}>Unid. Prod.</th>
+                <th style={thStyle}>Unid. Falt.</th>
+                <th style={thStyle}>Estado</th>
+                <th style={thStyle}>Cliente</th>
+                <th style={thStyle}>Acc.</th>
               </tr>
-            ) : ops.map(op => (
-              <React.Fragment key={op.id}>
-                <tr style={{ cursor: 'pointer' }}>
-                  <td onClick={() => toggleOP(op.id)}>
-                    <i className={`fas fa-chevron-${opExpandida === op.id ? 'down' : 'right'} text-muted`}></i>
-                  </td>
-                  <td onClick={() => toggleOP(op.id)}>{op.id}</td>
-                  <td onClick={() => toggleOP(op.id)}>{formatFecha(op.fecha)}</td>
-                  <td onClick={() => toggleOP(op.id)}>{op.producto?.nombre}</td>
-                  <td onClick={() => toggleOP(op.id)}>{op.color?.nombre}</td>
-                  <td onClick={() => toggleOP(op.id)}>{op.ancho} cm</td>
-                  <td onClick={() => toggleOP(op.id)}>{op.espesor} µ</td>
-                  <td onClick={() => toggleOP(op.id)}>{op.largo} cm</td>
-                  <td onClick={() => toggleOP(op.id)}><strong>{op.unidades.toLocaleString()}</strong></td>
-                  <td onClick={() => toggleOP(op.id)}>
-                    <span className="text-success fw-bold">{op.unidades_producidas.toLocaleString()}</span>
-                  </td>
-                  <td onClick={() => toggleOP(op.id)}>
-                    <span className={op.unidades_faltantes > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
-                      {op.unidades_faltantes.toLocaleString()}
-                    </span>
-                  </td>
-                  <td onClick={() => toggleOP(op.id)}>
-                    <Badge bg={estadoBadge[op.estado]}>{estadoLabel[op.estado]}</Badge>
-                  </td>
-                  <td onClick={() => toggleOP(op.id)}>{op.empresa?.nombre || <span className="text-muted">—</span>}</td>
-                  <td>
-                    <Button size="sm" variant="outline-dark" className="me-1"
-                      onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
-                      <i className="fas fa-edit"></i>
-                    </Button>
-                    {op.estado === 'pendiente' && (
-                      <Button size="sm" variant="outline-danger" onClick={() => handleEliminarOP(op.id)}>
-                        <i className="fas fa-trash"></i>
-                      </Button>
-                    )}
+            </thead>
+            <tbody>
+              {ops.length === 0 ? (
+                <tr>
+                  <td colSpan={14} className="text-center text-muted py-5">
+                    <i className="fas fa-cut fa-2x mb-2 d-block"></i>
+                    No hay órdenes de producción
                   </td>
                 </tr>
-
-                {/* Nivel 2: Turnos */}
-                {opExpandida === op.id && (
-                  <tr>
-                    <td colSpan={14} className="p-0">
-                      <div className="bg-light px-4 py-3 border-start border-4 border-warning">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <strong><i className="fas fa-calendar-alt me-2 text-warning"></i>Turnos OP #{op.id}</strong>
-                          <Button size="sm" variant="warning"
-                            onClick={() => { setOpIdParaProd(op.id); setShowProdModal(true) }}>
-                            <i className="fas fa-plus me-1"></i>Agregar turno
-                          </Button>
-                        </div>
-                        <Table size="sm" hover className="mb-0 bg-white">
-                          <thead className="table-warning">
-                            <tr>
-                              <th style={{ width: 40 }}></th>
-                              <th>Fecha</th>
-                              <th>Turno</th>
-                              <th>Máquina</th>
-                              <th>Unidades Producidas</th>
-                              <th>Rollos</th>
-                              <th>Acciones</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(producciones[op.id] || []).length === 0 ? (
-                              <tr><td colSpan={7} className="text-center text-muted py-2">Sin turnos</td></tr>
-                            ) : (producciones[op.id] || []).map(prod => (
-                              <React.Fragment key={prod.id}>
-                                <tr style={{ cursor: 'pointer' }}
-                                  onMouseEnter={() => setHoveredProd(prod.id)}
-                                  onMouseLeave={() => setHoveredProd(null)}>
-                                  <td onClick={() => toggleProduccion(prod.id)}>
-                                    <i className={`fas fa-chevron-${produccionExpandida === prod.id ? 'down' : 'right'} text-muted`}></i>
-                                  </td>
-                                  <td onClick={() => toggleProduccion(prod.id)}>{formatFecha(prod.fecha)}</td>
-                                  <td onClick={() => toggleProduccion(prod.id)}>
-                                    <Badge bg="secondary">{prod.turno}</Badge>
-                                  </td>
-                                  <td onClick={() => toggleProduccion(prod.id)}>{prod.maquina?.nombre || '—'}</td>
-                                  <td onClick={() => toggleProduccion(prod.id)}>
-                                    <span className="text-success fw-bold">{prod.unidades_producidas.toLocaleString()}</span>
-                                  </td>
-                                  <td onClick={() => toggleProduccion(prod.id)}>
-                                    <Badge bg="info" text="dark">{(detalles[prod.id] || []).length} rollos</Badge>
-                                  </td>
-                                  <td>
-                                    <Button size="sm" variant="outline-danger"
-                                      style={{ visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
-                                      onClick={() => handleEliminarProduccion(prod.id, op.id)}>
-                                      <i className="fas fa-trash"></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-
-                                {/* Nivel 3: Detalles */}
-                                {produccionExpandida === prod.id && (
-                                  <tr>
-                                    <td colSpan={7} className="p-0">
-                                      <div className="bg-white px-4 py-3 border-start border-4 border-info">
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                          <strong><i className="fas fa-list me-2 text-info"></i>Rollos procesados</strong>
-                                          <Button size="sm" variant="info"
-                                            onClick={() => {
-                                              setProdIdParaDetalle(prod.id)
-                                              setOpParaDetalle(op)
-                                              setShowDetalleModal(true)
-                                            }}>
-                                            <i className="fas fa-plus me-1"></i>Agregar rollo
-                                          </Button>
-                                        </div>
-                                        <Table size="sm" hover className="mb-0">
-                                          <thead className="table-info">
-                                            <tr>
-                                              <th>Rollo Extrusora</th>
-                                              <th>KG Rollo</th>
-                                              <th>Paquetes</th>
-                                              <th>Unid/Paquete</th>
-                                              <th>Total Unidades</th>
-                                              <th>Acciones</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {(detalles[prod.id] || []).length === 0 ? (
-                                              <tr><td colSpan={6} className="text-center text-muted py-2">Sin rollos</td></tr>
-                                            ) : (detalles[prod.id] || []).map(det => (
-                                              <tr key={det.id}>
-                                                <td><Badge bg="info" text="dark">#{String(det.numero_rollo).padStart(3, '0')}</Badge></td>
-                                                <td>{det.kilos} kg</td>
-                                                <td>{det.q_paquetes}</td>
-                                                <td>{det.q_unidades_por_paquete}</td>
-                                                <td><strong>{det.unidades.toLocaleString()}</strong></td>
-                                                <td>
-                                                  <Button size="sm" variant="outline-info" className="me-1"
-                                                onClick={() => {
-                                                  setEtiquetaSelladoraData({ detalle: det, produccion: prod, op })
-                                                  setShowEtiquetaSelladora(true)
-                                                }}>
-                                                <i className="fas fa-tag"></i>
-                                              </Button>
-                                                  <Button size="sm" variant="outline-danger"
-                                                    onClick={() => handleEliminarDetalle(det.id, prod.id)}>
-                                                    <i className="fas fa-trash"></i>
-                                                  </Button>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </Table>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </tbody>
-                        </Table>
-                      </div>
+              ) : ops.map(op => (
+                <React.Fragment key={op.id}>
+                  <tr style={{ cursor: 'pointer' }}
+                    className={opExpandida === op.id ? 'op-row-activa' : ''}>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>
+                      <i className={`fas fa-chevron-${opExpandida === op.id ? 'down' : 'right'} text-muted`}></i>
                     </td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.id}</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{formatFecha(op.fecha)}</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.producto?.nombre}</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.color?.nombre}</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.ancho} cm</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.espesor} µ</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.largo} cm</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}><strong>{op.unidades.toLocaleString()}</strong></td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>
+                      <span className="text-success fw-bold">{op.unidades_producidas.toLocaleString()}</span>
+                    </td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>
+                      <span className={op.unidades_faltantes > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
+                        {op.unidades_faltantes.toLocaleString()}
+                      </span>
+                    </td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>
+                      <Badge bg={estadoBadge[op.estado]} style={{ fontSize: 'clamp(9px,1vw,11px)' }}>{estadoLabel[op.estado]}</Badge>
+                    </td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.empresa?.nombre || '—'}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+
+                      {op.estado === 'pendiente' && (
+                        <Button size="sm" variant="outline-danger" style={btnStyle}
+                          onClick={() => handleEliminarOP(op.id)}>
+                          <i className="fas fa-trash"></i>
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline-dark" className="me-1" style={btnStyle}
+                        onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
+                        <i className="fas fa-edit"></i>
+                      </Button>
+                      
+
+                      <Button size="sm" variant="outline-primary" className="me-1" style={btnStyle}
+                          onClick={() => { setOpParaGuia(op); setShowGuia(true) }}>
+                          <i className="fas fa-truck"></i>
+                        </Button>
+                    </td>
+                    
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </Table>
+
+                  {/* Nivel 2: Turnos */}
+                  {opExpandida === op.id && (
+                    <tr className="op-expansion">
+                      <td colSpan={14} className="p-0">
+                        <div style={{
+                          margin: '8px 12px',
+                          background: '#fffdf0',
+                          border: '2px solid #ffc107',
+                          borderRadius: 8,
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                          position: 'relative',
+                          zIndex: 20,
+                          maxWidth: '70%'
+                        }}>
+                          <div className="px-3 py-2 border-bottom border-warning d-flex justify-content-between align-items-center"
+                            style={{ background: '#fff8e1', borderRadius: '6px 6px 0 0' }}>
+                            <div className="d-flex gap-2 align-items-center">
+                              <Button size="sm" variant="warning" style={btnStyle}
+                                onClick={() => { setOpIdParaProd(op.id); setShowProdModal(true) }}>
+                                <i className="fas fa-plus me-1"></i>Agregar turno
+                              </Button>
+                              <Button size="sm" variant="outline-secondary" style={btnStyle}
+                                onClick={() => setOpExpandida(null)}>
+                                <i className="fas fa-times"></i>
+                              </Button>
+                            </div>
+                            <span style={{ fontSize: 'clamp(10px,1.1vw,12px)', color: '#555' }}>
+                              Turnos OP #{op.id}
+                            </span>
+                          </div>
+
+                          <div className="px-3 py-2" style={{ overflowX: 'auto' }}>
+                            {(producciones[op.id] || []).length === 0 ? (
+                              <div className="text-center text-muted py-3 small">
+                                <i className="fas fa-inbox me-2"></i>Sin turnos registrados
+                              </div>
+                            ) : (
+                              <Table size="sm" hover className="mb-0 bg-white" style={{ minWidth: 500 }}>
+                                <tbody>
+                                  {(producciones[op.id] || []).map(prod => (
+                                    <React.Fragment key={prod.id}>
+                                      <tr style={{
+                                        cursor: 'pointer',
+                                        display: produccionExpandida && produccionExpandida !== prod.id ? 'none' : ''
+                                      }}
+                                        onMouseEnter={() => setHoveredProd(prod.id)}
+                                        onMouseLeave={() => setHoveredProd(null)}>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <i className={`fas fa-chevron-${produccionExpandida === prod.id ? 'down' : 'right'} text-muted`}></i>
+                                        </td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{formatFecha(prod.fecha)}</td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <Badge bg="secondary" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>{prod.turno}</Badge>
+                                        </td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{prod.maquina?.nombre || '—'}</td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <span className="text-success fw-bold">{prod.unidades_producidas.toLocaleString()}</span>
+                                        </td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
+                                            {(detalles[prod.id] || []).length} rollos
+                                          </Badge>
+                                        </td>
+                                        <td style={tdStyle}>
+                                          <Button size="sm" variant="outline-danger"
+                                            style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                            onClick={() => handleEliminarProduccion(prod.id, op.id)}>
+                                            <i className="fas fa-trash"></i>
+                                          </Button>
+                                        </td>
+                                      </tr>
+
+                                      {/* Nivel 3: Detalles */}
+                                      {produccionExpandida === prod.id && (
+                                        <tr>
+                                          <td colSpan={7} className="p-0">
+                                            <div style={{
+                                              margin: '8px 16px',
+                                              background: 'white',
+                                              border: '2px solid #0dcaf0',
+                                              borderRadius: 8,
+                                              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                                              position: 'relative',
+                                              zIndex: 30,
+                                              display: 'inline-block',
+                                              minWidth: 360,
+                                              maxWidth: 480
+                                            }}>
+                                              <div className="px-3 py-2 border-bottom border-info d-flex justify-content-between align-items-center"
+                                                style={{ background: '#f0fbff', borderRadius: '6px 6px 0 0' }}>
+                                                <Button size="sm" variant="info" style={btnStyle}
+                                                  onClick={() => {
+                                                    setProdIdParaDetalle(prod.id)
+                                                    setOpParaDetalle(op)
+                                                    setShowDetalleModal(true)
+                                                  }}>
+                                                  <i className="fas fa-plus me-1"></i>Agregar rollo
+                                                </Button>
+                                                <span style={{ fontSize: 'clamp(10px,1.1vw,12px)', color: '#555' }}>
+                                                  {(detalles[prod.id] || []).length} rollos procesados
+                                                </span>
+                                              </div>
+
+                                              <div className="px-3 py-2">
+                                                {(detalles[prod.id] || []).length === 0 ? (
+                                                  <div className="text-center text-muted py-2 small">
+                                                    <i className="fas fa-inbox me-2"></i>Sin rollos
+                                                  </div>
+                                                ) : (
+                                                  <Table size="sm" hover className="mb-0">
+                                                    
+                                                    <tbody>
+                                                      {(detalles[prod.id] || []).map(det => (
+                                                        <tr key={det.id}>
+                                                          <td style={tdStyle}>
+                                                            <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
+                                                              #{String(det.numero_rollo).padStart(3, '0')}
+                                                            </Badge>
+                                                          </td>
+                                                          <td style={tdStyle}>{det.kilos}kg</td>
+                                                          <td style={tdStyle}>{det.q_paquetes} Packs</td>
+                                                          <td style={tdStyle}>{det.q_unidades_por_paquete} u. p/p</td>
+                                                          <td style={tdStyle}><strong>{det.unidades.toLocaleString()} Unid.</strong></td>
+                                                          <td style={tdStyle}>
+                                                            <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
+                                                              onClick={() => {
+                                                                setEtiquetaData({ detalle: det, produccion: prod, op })
+                                                                setShowEtiqueta(true)
+                                                              }}>
+                                                              <i className="fas fa-tag"></i>
+                                                            </Button>
+                                                            <Button size="sm" variant="outline-danger" style={btnStyle}
+                                                              onClick={() => handleEliminarDetalle(det.id, prod.id)}>
+                                                              <i className="fas fa-trash"></i>
+                                                            </Button>
+                                                          </td>
+                                                        </tr>
+                                                      ))}
+                                                    </tbody>
+                                                  </Table>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </React.Fragment>
+                                  ))}
+                                </tbody>
+                              </Table>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       )}
 
       <OPSelladoraModal
@@ -396,15 +454,51 @@ const [etiquetaSelladoraData, setEtiquetaSelladoraData] = useState({ detalle: nu
         />
       )}
 
-      {etiquetaSelladoraData.detalle && (
-          <EtiquetaSelladoraModal
-            show={showEtiquetaSelladora}
-            onHide={() => { setShowEtiquetaSelladora(false) }}
-            detalle={etiquetaSelladoraData.detalle}
-            produccion={etiquetaSelladoraData.produccion}
-            op={etiquetaSelladoraData.op}
-          />
-        )}
+      {etiquetaData.detalle && (
+        <EtiquetaSelladoraModal
+          show={showEtiqueta}
+          onHide={() => setShowEtiqueta(false)}
+          detalle={etiquetaData.detalle}
+          produccion={etiquetaData.produccion}
+          op={etiquetaData.op}
+        />
+      )}
+
+      <style>{`
+        .op-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.55);
+          z-index: 10;
+          transition: opacity 0.3s;
+        }
+        .op-row-activa {
+          position: relative;
+          z-index: 20;
+          background: white !important;
+        }
+        .op-row-activa td {
+          background: white !important;
+        }
+        .op-expansion {
+          position: relative;
+          z-index: 20;
+          background: white !important;
+        }
+        .op-expansion > td {
+          background: white !important;
+        }
+      `}</style>
+
+
+      {opParaGuia && (
+  <GuiaSelladoraModal
+    show={showGuia}
+    onHide={() => { setShowGuia(false); setOpParaGuia(null) }}
+    op={opParaGuia}
+    empresas={empresas}
+  />
+    )}  
     </Container>
   )
 }
