@@ -127,10 +127,10 @@ export default function ReporteSemanaPage() {
             <thead>
               {/* Fila turno */}
               <tr>
-                <th style={{ ...thBase, width: 60, background: '#1F3864', color: 'white' }}>COD</th>
-                <th style={{ ...thBase, width: 220, background: '#1F3864', color: 'white', textAlign: 'left' }}>PRODUCTO</th>
+                <th style={{ ...thBase, width: 60, background: '#f0f3f8', color: 'white' }}></th>
+                <th style={{ ...thBase, width: 220, background: '#eff1f5', color: 'white', textAlign: 'left' }}></th>
                 <th colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>
-                  <i className="fas fa-sun me-1"></i>TURNO DÍA
+                   <i className="fas fa-sun me-1"></i>TURNO DIA
                 </th>
                 <th colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>
                   <i className="fas fa-moon me-1"></i>TURNO NOCHE
@@ -155,16 +155,24 @@ export default function ReporteSemanaPage() {
             <tbody>
               {/* Sección Extrusora */}
               <tr>
-                <td colSpan={12} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
+                <td colSpan={2} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
                   <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
+                </td>
+                <td colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>                 
+                </td>
+                <td colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>                  
                 </td>
               </tr>
               {renderSeccion(reporte.extrusora, 'Extrusora', '#EBF3FB', 'kg')}
 
               {/* Sección Selladora */}
               <tr>
-                <td colSpan={12} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
+                <td colSpan={2} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
                   <i className="fas fa-cut me-2"></i>SELLADORA (UNIDADES)
+                </td>
+                <td colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>                 
+                </td>
+                <td colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>                  
                 </td>
               </tr>
               {renderSeccion(reporte.selladora, 'Selladora', '#FFF8E1', 'unidades')}

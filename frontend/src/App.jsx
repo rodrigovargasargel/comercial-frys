@@ -82,13 +82,15 @@ function AppRoutes() {
           </RutaProtegida>
         } />
 
-      </Route>
-
-      <Route path="informe-produccion" element={
+        <Route path="informe-produccion" element={
           <RutaProtegida perfilesPermitidos={[1, 2]}>
             <ReporteSemanaPage />
           </RutaProtegida>
         } />
+
+      </Route>
+
+      
     </Routes>
   )
 }
