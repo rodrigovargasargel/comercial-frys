@@ -5,11 +5,16 @@ services:
     image: mysql:8.0
     container_name: frys_db
     restart: always
+    command: --default-authentication-plugin=mysql_native_password --performance_schema=OFF --innodb_buffer_pool_size=128M
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 350M # Capamos MySQL
     ports:
       - "3306:3306"
     volumes:
@@ -19,6 +24,10 @@ services:
     build: ./backend
     container_name: frys_backend
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 250M
     ports:
       - "8000:8000"
     volumes:
@@ -35,6 +44,10 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
     container_name: frys_frontend
+    deploy:
+      resources:
+        limits:
+          memory: 200M
     ports:
       - "5173:5173"
     volumes:
