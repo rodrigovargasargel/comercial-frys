@@ -89,13 +89,17 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 </div>
 
                 {/* Unidades */}
+                {/* Unidades y Kilos */}
                 <div style={{ textAlign: 'center' }}>
-               
-                <div style={{  fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
-                     
-                    {detalle.q_unidades_por_paquete}
-                    <div style={{ fontSize: 10, color: '#555' }}>UNIDADES</div>
-                </div>
+                 
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 16 }}>
+                    <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
+                      {detalle.q_unidades_por_paquete} <span style={{ fontSize: 14, fontWeight: 'normal' }}>unid. /</span>
+                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
+                      {detalle.kilos} <span style={{ fontSize: 14, fontWeight: 'normal' }}>kg</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Pie */}

@@ -78,6 +78,7 @@ class ProduccionSelladoraDetalleCreate(BaseModel):
     detalle_extrusora_id: int
     q_paquetes: int
     q_unidades_por_paquete: int
+    kilos_producidos: Optional[float] = None 
 
 class ProduccionSelladoraDetalleOut(BaseModel):
     id: int
@@ -104,4 +105,6 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     densidad_extrusora: Optional[str] = None
     created_at: Optional[datetime] = None
     class Config:
-        from_attributes = True      
+        from_attributes = True   
+
+             

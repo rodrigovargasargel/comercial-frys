@@ -5,16 +5,25 @@ import { getRollosDisponibles } from '../../api/selladora'
 export default function DetalleSelladoraModal({ show, onHide, onSave, produccionId, op }) {
   const [rollos, setRollos] = useState([])
   const [loadingRollos, setLoadingRollos] = useState(false)
-  const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '' })
+  const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '' })
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (show && op) {
-      setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '' })
-      setError(null)
-      cargarRollos()
+  if (show && op) {
+    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '' })
+    setError(null)
+    cargarRollos()
+  }
+}, [show, op])
+
+useEffect(() => {
+  if (form.detalle_extrusora_id) {
+    const rollo = rollos.find(r => r.id === parseInt(form.detalle_extrusora_id))
+    if (rollo) {
+      setForm(prev => ({ ...prev, kilos_producidos: rollo.kg }))
     }
-  }, [show, op])
+  }
+}, [form.detalle_extrusora_id, rollos])
 
   const cargarRollos = async () => {
     try {
@@ -38,19 +47,19 @@ export default function DetalleSelladoraModal({ show, onHide, onSave, produccion
   const unidadesCalculadas = (parseInt(form.q_paquetes) || 0) * (parseInt(form.q_unidades_por_paquete) || 0)
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!form.detalle_extrusora_id || !form.q_paquetes || !form.q_unidades_por_paquete) {
-      setError('Todos los campos son obligatorios')
-      return
-    }
-    onSave({
-      produccion_selladora_id: produccionId,
-      detalle_extrusora_id: parseInt(form.detalle_extrusora_id),
-      q_paquetes: parseInt(form.q_paquetes),
-      q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete)
-    })
+  e.preventDefault()
+  if (!form.detalle_extrusora_id || !form.q_paquetes || !form.q_unidades_por_paquete) {
+    setError('Todos los campos son obligatorios')
+    return
   }
-
+  onSave({
+    produccion_selladora_id: produccionId,
+    detalle_extrusora_id: parseInt(form.detalle_extrusora_id),
+    q_paquetes: parseInt(form.q_paquetes),
+    q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
+    kilos_producidos: parseFloat(form.kilos_producidos) || rolloSeleccionado?.kg || 0
+  })
+}
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton className="bg-dark text-white">
@@ -95,12 +104,21 @@ export default function DetalleSelladoraModal({ show, onHide, onSave, produccion
 
           {/* Info rollo seleccionado */}
           {rolloSeleccionado && (
-            <div className="mb-3 p-2 bg-light rounded small">
-              <strong>Rollo #{String(rolloSeleccionado.numero_rollo).padStart(3, '0')}</strong> —
-              <span className="text-success ms-1">{rolloSeleccionado.kg} kg</span> —
-              Lote {rolloSeleccionado.lote}
-            </div>
-          )}
+                <Form.Group className="mb-3">
+                  <Form.Label>Kilos producidos <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="kilos_producidos"
+                    value={form.kilos_producidos}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    Por defecto: {rolloSeleccionado.kg} kg del rollo. Puedes modificarlo.
+                  </Form.Text>
+                </Form.Group>
+              )}
 
           <Row>
             <Col md={6}>

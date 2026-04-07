@@ -125,6 +125,44 @@ def get_rollos_disponibles(db: Session, color_id: int, ancho: float, espesor: fl
     return rollos
 
 def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
+    usado = db.query(ProduccionSelladoraDetalle)\
+        .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id).first()
+    if usado:
+        raise ValueError("Este rollo ya fue usado en otra producción")
+
+    rollo = db.query(DetalleProduccionExtrusora)\
+        .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
+    if not rollo:
+        raise ValueError("Rollo no encontrado")
+
+    unidades = data.q_paquetes * data.q_unidades_por_paquete
+    # Usar kilos_producidos si fue editado, sino usar los kg del rollo
+    kilos = data.kilos_producidos if data.kilos_producidos is not None else rollo.kg
+
+    detalle = ProduccionSelladoraDetalle(
+        produccion_selladora_id=data.produccion_selladora_id,
+        detalle_extrusora_id=data.detalle_extrusora_id,
+        q_paquetes=data.q_paquetes,
+        q_unidades_por_paquete=data.q_unidades_por_paquete,
+        unidades=unidades,
+        kilos=kilos
+    )
+    db.add(detalle)
+    db.commit()
+    db.refresh(detalle)
+
+    prod = db.query(ProduccionSelladora)\
+        .filter(ProduccionSelladora.id == data.produccion_selladora_id).first()
+    if prod:
+        op = db.query(OPSelladora).filter(OPSelladora.id == prod.op_id).first()
+        if op:
+            total = _unidades_producidas_op(db, op.id)
+            if total >= op.unidades:
+                op.estado = "completada"
+                db.commit()
+
+    detalle.numero_rollo = rollo.numero_rollo
+    return detalle    
     # Verificar que el rollo no esté usado
     usado = db.query(ProduccionSelladoraDetalle)\
         .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id).first()
@@ -183,3 +221,5 @@ def get_detalles_by_produccion(db: Session, prod_id: int):
         else:
             d.lote_extrusora = None
     return detalles    
+
+   
