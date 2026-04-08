@@ -2,7 +2,7 @@ import { Modal, Button } from 'react-bootstrap'
 import { useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
-export default function EtiquetaSelladoraModal({ show, onHide, detalle, produccion, op }) {
+export default function EtiquetaSelladoraModal({ show, onHide, detalle, produccion, op,imprimir_kg }) {
   const printRef = useRef()
 
   if (!detalle || !produccion || !op) return null
@@ -96,9 +96,11 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                     <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
                       {detalle.q_unidades_por_paquete} <span style={{ fontSize: 14, fontWeight: 'normal' }}>unid. /</span>
                     </div>
-                    <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
-                      {detalle.kilos} <span style={{ fontSize: 14, fontWeight: 'normal' }}>kg</span>
-                    </div>
+                     {imprimir_kg && (
+                          <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
+                            {detalle.kilos} <span style={{ fontSize: 14, fontWeight: 'normal' }}>kg</span>
+                          </div>
+                        )}
                   </div>
                 </div>
 

@@ -85,6 +85,7 @@ def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
             q_unidades_por_paquete=d.q_unidades_por_paquete,
             unidades=d.unidades,
             kilos=d.kilos,
+            kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else d.kilos,
             numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
             lote_extrusora=lote,
             fecha_extrusora=fecha,

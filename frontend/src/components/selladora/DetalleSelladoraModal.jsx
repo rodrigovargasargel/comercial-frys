@@ -5,12 +5,12 @@ import { getRollosDisponibles } from '../../api/selladora'
 export default function DetalleSelladoraModal({ show, onHide, onSave, produccionId, op }) {
   const [rollos, setRollos] = useState([])
   const [loadingRollos, setLoadingRollos] = useState(false)
-  const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '' })
+ const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false })
   const [error, setError] = useState(null)
 
   useEffect(() => {
   if (show && op) {
-    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '' })
+    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false })
     setError(null)
     cargarRollos()
   }
@@ -57,7 +57,8 @@ useEffect(() => {
     detalle_extrusora_id: parseInt(form.detalle_extrusora_id),
     q_paquetes: parseInt(form.q_paquetes),
     q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
-    kilos_producidos: parseFloat(form.kilos_producidos) || rolloSeleccionado?.kg || 0
+    kilos_producidos: parseFloat(form.kilos_producidos) || rolloSeleccionado?.kg || 0,
+    imprimir_kg: form.imprimir_kg
   })
 }
   return (
@@ -104,8 +105,11 @@ useEffect(() => {
 
           {/* Info rollo seleccionado */}
           {rolloSeleccionado && (
+                <Row>
                 <Form.Group className="mb-3">
-                  <Form.Label>Kilos producidos <span className="text-danger">*</span></Form.Label>
+                  <Col md={6}>
+                  
+                  <Form.Label>Kilos x PACK <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="number"
                     step="0.01"
@@ -114,12 +118,24 @@ useEffect(() => {
                     onChange={handleChange}
                     required
                   />
-                  <Form.Text className="text-muted">
-                    Por defecto: {rolloSeleccionado.kg} kg del rollo. Puedes modificarlo.
-                  </Form.Text>
+                  </Col>
+                  <Col md={6}>
+                  <Form.Check
+                      type="checkbox"
+                      label="Imprimir KG en la etiqueta"
+                      checked={form.imprimir_kg}
+                      onChange={e => setForm(prev => ({ ...prev, imprimir_kg: e.target.checked }))}
+                      className="mt-2"
+                
+                  />
+                  </Col>
                 </Form.Group>
-              )}
 
+                </Row>
+                
+              )}
+                <br></br>
+                <hr></hr>
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">

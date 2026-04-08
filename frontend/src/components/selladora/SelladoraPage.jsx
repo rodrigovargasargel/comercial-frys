@@ -388,10 +388,14 @@ export default function SelladoraPage() {
                                                           <td style={tdStyle}><strong>{det.unidades.toLocaleString()} Unid.</strong></td>
                                                           <td style={tdStyle}>
                                                             <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
+                                                              
                                                               onClick={() => {
-                                                                setEtiquetaData({ detalle: det, produccion: prod, op })
+                                                                const imprimir_kg = det.kg_rollo_original !== null && det.kilos < det.kg_rollo_original
+                                                                setEtiquetaData({ detalle: det, produccion: prod, op, imprimir_kg })
                                                                 setShowEtiqueta(true)
-                                                              }}>
+                                                              }}
+                                                              
+                                                              >
                                                               <i className="fas fa-tag"></i>
                                                             </Button>
                                                             <Button size="sm" variant="outline-danger" style={btnStyle}

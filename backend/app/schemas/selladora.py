@@ -87,6 +87,7 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     q_unidades_por_paquete: int
     unidades: int
     kilos: float
+    kg_rollo_original: Optional[float] = None
     numero_rollo: int = 0
     created_at: Optional[datetime] = None
     class Config:
