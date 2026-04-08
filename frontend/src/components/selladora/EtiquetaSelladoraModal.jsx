@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 
 export default function EtiquetaSelladoraModal({ show, onHide, detalle, produccion, op,imprimir_kg }) {
   const printRef = useRef()
-
+  console.log("holaaa: ", detalle , imprimir_kg)
   if (!detalle || !produccion || !op) return null
 
       const densidad = detalle.densidad_extrusora === 'alta' ? 'A/D' : detalle.densidad_extrusora === 'baja' ? 'B/D' : '—'
@@ -96,7 +96,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                     <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
                       {detalle.q_unidades_por_paquete} <span style={{ fontSize: 14, fontWeight: 'normal' }}>unid. /</span>
                     </div>
-                     {imprimir_kg && (
+                     {detalle.imprimir_kg && (
                           <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
                             {detalle.kilos} <span style={{ fontSize: 14, fontWeight: 'normal' }}>kg</span>
                           </div>

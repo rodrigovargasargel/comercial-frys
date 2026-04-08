@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
@@ -47,6 +47,7 @@ class ProduccionSelladoraDetalle(Base):
     q_unidades_por_paquete = Column(Integer, nullable=False)
     unidades = Column(Integer, nullable=False)
     kilos = Column(Float, nullable=False)
+    imprimir_kg = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
     produccion = relationship("ProduccionSelladora", back_populates="detalles")

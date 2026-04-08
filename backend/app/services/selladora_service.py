@@ -145,7 +145,8 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         q_paquetes=data.q_paquetes,
         q_unidades_por_paquete=data.q_unidades_por_paquete,
         unidades=unidades,
-        kilos=kilos
+        kilos=kilos,
+        imprimir_kg=data.imprimir_kg
     )
     db.add(detalle)
     db.commit()

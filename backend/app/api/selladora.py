@@ -78,20 +78,21 @@ def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
             ).first()
             if op_ext:
                 densidad = op_ext.densidad
-        result.append(ProduccionSelladoraDetalleOut(
-            id=d.id,
-            detalle_extrusora_id=d.detalle_extrusora_id,
-            q_paquetes=d.q_paquetes,
-            q_unidades_por_paquete=d.q_unidades_por_paquete,
-            unidades=d.unidades,
-            kilos=d.kilos,
-            kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else d.kilos,
-            numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
-            lote_extrusora=lote,
-            fecha_extrusora=fecha,
-            densidad_extrusora=densidad,
-            created_at=d.created_at
-        ))
+            result.append(ProduccionSelladoraDetalleOut(
+                id=d.id,
+                detalle_extrusora_id=d.detalle_extrusora_id,
+                q_paquetes=d.q_paquetes,
+                q_unidades_por_paquete=d.q_unidades_por_paquete,
+                unidades=d.unidades,
+                kilos=d.kilos,
+                kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else None,  # ← este
+                imprimir_kg=d.imprimir_kg,
+                numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
+                lote_extrusora=lote,
+                fecha_extrusora=fecha,
+                densidad_extrusora=densidad,
+                created_at=d.created_at
+            ))
     return result
 
 @router.get("/rollos-disponibles", response_model=List[DetalleExtrusoraDisponible])
