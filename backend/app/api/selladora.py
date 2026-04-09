@@ -128,8 +128,7 @@ def listar_productos_selladora(db: Session = Depends(get_db)):
     if not tipo:
         return []
     return db.query(Producto).filter(
-    Producto.tipo_maquina_id == tipo.id,
-    Producto.id <= 15
+    Producto.tipo_maquina_id == tipo.id
 ).all()     
 
 @router.post("/ops/{op_id}/trazabilidad")
