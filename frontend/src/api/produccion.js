@@ -18,3 +18,7 @@ export const getColores = () => API.get('/produccion/colores')
 export const getProductosExtrusora = () => API.get('/produccion/productos-extrusora')
 
 export const updateProduccion = (id, data) => API.put(`/produccion/producciones/${id}`, data)
+
+
+export const getOCs = (empresa_id = null) => 
+  API.get('/produccion/ocs', { params: empresa_id ? { empresa_id } : {} })

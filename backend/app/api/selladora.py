@@ -143,7 +143,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
     cliente = body.get('cliente', '')
     nro_guia = body.get('nro_guia', '')
-
+    oc_cliente = body.get('oc_cliente', '')
     # Obtener todos los detalles de selladora de esta OP
     prods = selladora_service.get_producciones_by_op(db, op_id)
     
@@ -159,19 +159,26 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws.title = str(op_id)
 
     # Anchos columnas A-K
-    anchos = [8, 14, 10, 28, 14, 14, 12, 14, 10, 10, 12]
+    anchos = [8, 14, 36, 14, 14, 12, 14, 12, 10, 10, 12]
     for i, w in enumerate(anchos, 1):
-        ws.column_dimensions[get_column_letter(i)].width = w
+     ws.column_dimensions[get_column_letter(i)].width = w
 
     hoy = date_type.today()
     fecha_str = hoy.strftime('%d/%m/%Y')
 
     # Nº
-    ws['H2'] = 'Nº :'
-    ws['H2'].font = Font(bold=True, size=10, color='1F3864')
-    ws['I2'] = op_id
-    ws['I2'].font = Font(bold=True, size=12, color='1F3864')
-    ws['I2'].alignment = Alignment(horizontal='center')
+    ws['H4'] = 'Nº :'
+    ws['H4'].font = Font(bold=True, size=10, color='1F3864')
+    ws['I4'] = op_id
+    ws['I4'].font = Font(bold=True, size=12, color='1F3864')
+    ws['I4'].alignment = Alignment(horizontal='center')
+
+    ws['H3'] = 'N° de Informe :'
+    ws['H3'].font = Font(bold=True, size=10, color='1F3864')
+    numero_informe = f"{hoy.strftime('%d%m%y')}-{op_id}"
+    ws['I3'] = numero_informe
+    ws['I3'].font = Font(bold=True, size=10, color='1F3864')
+    ws['I3'].alignment = Alignment(horizontal='center')
 
     # Empresa
     empresa_rows = [
@@ -222,20 +229,20 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws['C14'] = ' '.join(sorted(lotes))
     ws['C14'].font = Font(size=10)
 
-    ws['A15'] = 'PEDIDO  MEDRED GUIA'
+    ws['A15'] = 'ORDEN DE COMPRA'
     ws['A15'].font = Font(bold=True, size=10, color='1F3864')
-    ws['C15'] = nro_guia
+    ws['C15'] = oc_cliente if oc_cliente else ''
     ws['C15'].font = Font(bold=True, size=10)
 
     # Encabezado tabla — sin COD ni PROVEEDOR
     HEADER_ROW = 16
     headers = [
-        ('A','GUIA'), ('B','FECHA'), ('D','NOMBRE PRODUCTO'),
-        ('F','F. FABRICACIÓN'), ('G','LOTE'), ('H','F. VENCIMIENTO'),
-        ('I','N° PQTE'), ('J','UNID'), ('K','T. UNID')
+        ('A','GUIA/FACT'), ('B','FECHA'), ('C','NOMBRE PRODUCTO'),
+        ('E','F. FABRICACIÓN'), ('F','LOTE'), ('G','F. VENCIMIENTO'),
+        ('H','N° ROLLO'), ('I','N° PQTE'), ('J','UNID'), ('K','T. UNID')
     ]
     ws.row_dimensions[HEADER_ROW].height = 16
-    for col, h in headers:
+    for col, h in headers:  
         c = ws[f'{col}{HEADER_ROW}']
         c.value = h
         c.font = Font(bold=True, size=10, color='FFFFFF')
@@ -243,6 +250,8 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
         c.border = border_full
         c.alignment = Alignment(horizontal='center', vertical='center')
 
+   # Merge columnas C y D para Nombre Producto
+    ws.merge_cells(f'C{HEADER_ROW}:D{HEADER_ROW}')
     # Nombre producto
     nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.largo}x{op.espesor}"
 
@@ -270,13 +279,16 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
                     fecha_venc = fecha_venc_dt.strftime('%d/%m/%Y')
                 lote_rollo = str(d.detalle_extrusora.produccion.lote)
 
+            numero_rollo = d.detalle_extrusora.numero_rollo if d.detalle_extrusora else ''
+
             valores = [
                 ('A', nro_guia),
                 ('B', fecha_str),
-                ('D', nombre_producto),
-                ('F', fecha_fab),
-                ('G', lote_rollo),
-                ('H', fecha_venc),
+                ('C', nombre_producto),
+                ('E', fecha_fab),
+                ('F', lote_rollo),
+                ('G', fecha_venc),
+                ('H', numero_rollo),
                 ('I', d.q_paquetes),
                 ('J', d.q_unidades_por_paquete),
                 ('K', f'=J{fila}*I{fila}'),
@@ -287,13 +299,15 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
                 c.font = Font(size=10)
                 c.border = border_full
                 c.fill = fill
-                if col in ('I', 'J', 'K'):
+                if col in ('H', 'I', 'J', 'K'):
                     c.alignment = Alignment(horizontal='center')
+
+            # Merge C y D para nombre producto en cada fila
+            ws.merge_cells(f'C{fila}:D{fila}')
             fila += 1
 
     # Total
     total_row = fila
-    ws.row_dimensions[total_row].height = 16
     ws.merge_cells(f'A{total_row}:J{total_row}')
     c = ws[f'A{total_row}']
     c.value = 'TOTAL'

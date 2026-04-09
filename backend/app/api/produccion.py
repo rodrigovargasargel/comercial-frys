@@ -111,6 +111,17 @@ def eliminar_detalle(detalle_id: int, db: Session = Depends(get_db)):
     if not produccion_service.delete_detalle(db, detalle_id):
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     
+@router.get("/ocs")
+def listar_ocs(empresa_id: int = None, db: Session = Depends(get_db)):
+    from app.models.produccion import OrdenProduccion
+    query = db.query(OrdenProduccion.oc_cliente)\
+        .filter(OrdenProduccion.oc_cliente != None)\
+        .filter(OrdenProduccion.oc_cliente != '')
+    if empresa_id:
+        query = query.filter(OrdenProduccion.empresa_id == empresa_id)
+    ocs = query.distinct().all()
+    return [oc[0] for oc in ocs]   
+    
 #excel con formato bonito
 
 @router.post("/ops/{op_id}/packing")
@@ -293,3 +304,5 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'}
     )    
+
+
