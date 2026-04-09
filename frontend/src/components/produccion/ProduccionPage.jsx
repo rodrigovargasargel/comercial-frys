@@ -363,7 +363,10 @@ export default function ProduccionPage() {
                                   onClick={() => { setOpIdParaProduccion(op.id); setShowProduccionModal(true) }}>
                                   <i className="fas fa-plus me-1"></i>Agregar Extrusora
                                 </Button>
-                                
+                                <Button size="sm" variant="outline-secondary" style={btnStyle}
+                                                                onClick={() => setOpExpandida(null)}>
+                                                                <i className="fas fa-times"></i>
+                                                              </Button>
                               </div>
                               <span style={{ fontSize: 'clamp(10px,1.1vw,12px)', color: '#555' }}>
                                 Turnos NP #{op.id}

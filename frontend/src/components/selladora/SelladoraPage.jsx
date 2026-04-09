@@ -323,15 +323,24 @@ export default function SelladoraPage() {
                                           <Badge bg="secondary" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>{prod.turno}</Badge>
                                         </td>
                                         <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>{prod.maquina?.nombre || '—'}</td>
-                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
-                                          <span className="text-success fw-bold">{prod.unidades_producidas.toLocaleString()}</span>
-                                        </td>
+                                        
                                         <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
                                           <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
                                             {(detalles[prod.id] || []).length} rollos
                                           </Badge>
                                         </td>
-                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}> <i class="fa fa-user"></i>
+
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <span className="text-success fw-bold">{prod.unidades_producidas.toLocaleString()} unid.</span>
+                                        </td>
+
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                          <span className="text-secondary fw-bold">
+                                            {(detalles[prod.id] || []).reduce((sum, d) => sum + (d.q_paquetes || 0), 0).toLocaleString()} packs
+                                          </span>
+                                        </td>
+
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}> <i className="fa fa-user"></i>
                                               {prod.usuario?.nombre || '—'}
                                         </td>
                                         <td style={tdStyle}>
