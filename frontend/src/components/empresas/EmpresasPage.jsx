@@ -11,6 +11,19 @@ export default function EmpresasPage() {
   const [showModal, setShowModal] = useState(false)
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState(null)
 
+  const [busqueda, setBusqueda] = useState('')
+
+  const empresasFiltradas = empresas.filter(e => {
+    if (!busqueda.trim()) return true
+    const q = busqueda.toLowerCase()
+    return (
+      e.nombre?.toLowerCase().includes(q) ||
+      e.rut?.toLowerCase().includes(q) ||
+      e.tipo_empresa?.toLowerCase().includes(q) ||
+      e.telefono?.toLowerCase().includes(q)
+    )
+  })
+
   const cargarDatos = async () => {
     try {
       setLoading(true)
@@ -55,10 +68,19 @@ export default function EmpresasPage() {
           <i className="fas fa-building me-2"></i>
           Gestión de Empresas
         </h2>
-        <Button variant="dark" onClick={handleNuevo}>
-          <i className="fas fa-plus me-2"></i>
-          Nueva Empresa
-        </Button>
+        <div className="d-flex gap-2 align-items-center">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Buscar por nombre, RUT, tipo..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            style={{ width: 260 }}
+          />
+          <Button variant="dark" onClick={handleNuevo}>
+            <i className="fas fa-plus me-2"></i>Nueva Empresa
+          </Button>
+        </div>
       </div>
 
       {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
@@ -68,7 +90,7 @@ export default function EmpresasPage() {
           <Spinner animation="border" variant="dark" />
         </div>
       ) : (
-        <EmpresasTabla empresas={empresas} onEditar={handleEditar} onEliminar={handleEliminar} />
+        <EmpresasTabla empresas={empresasFiltradas} onEditar={handleEditar} onEliminar={handleEliminar} />
       )}
 
       <EmpresaModal

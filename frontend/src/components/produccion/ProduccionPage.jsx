@@ -78,6 +78,7 @@ export default function ProduccionPage() {
   const [etiquetaData, setEtiquetaData] = useState({ detalle: null, produccion: null, op: null })
   const [showEditarProd, setShowEditarProd] = useState(false)
   const [produccionAEditar, setProduccionAEditar] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
 
   const cargarDatos = async () => {
     try {
@@ -248,6 +249,22 @@ export default function ProduccionPage() {
   const tdStyle = { fontSize: 'clamp(11px, 1.2vw, 13px)', padding: '5px 8px', whiteSpace: 'nowrap' }
   const btnStyle = { padding: '2px 6px', fontSize: 'clamp(10px, 1vw, 12px)' }
 
+
+  const opsFiltradas = ops.filter(op => {
+  if (!busqueda.trim()) return true
+  const q = busqueda.toLowerCase()
+  return (
+    op.producto?.nombre?.toLowerCase().includes(q) ||
+    op.color?.nombre?.toLowerCase().includes(q) ||
+    op.empresa?.nombre?.toLowerCase().includes(q) ||
+    op.estado?.toLowerCase().includes(q) ||
+    String(op.id).includes(q) ||
+    String(op.ancho).includes(q) ||
+    String(op.espesor).includes(q) ||
+    op.densidad?.toLowerCase().includes(q)
+  )
+})
+
   return (
     <Container fluid className="py-3 px-2 px-md-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -255,9 +272,19 @@ export default function ProduccionPage() {
           <i className="fas fa-industry me-2"></i>
           Notas de Pedido — Extrusora
         </h5>
-        <Button variant="dark" size="sm" onClick={() => { setOpSeleccionada(null); setShowOPModal(true) }}>
-          <i className="fas fa-plus me-1"></i>Nueva NP
-        </Button>
+        <div className="d-flex gap-2 align-items-center">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Buscar por producto, color, cliente..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            style={{ width: 260 }}
+          />
+          <Button variant="dark" size="sm" onClick={() => { setOpSeleccionada(null); setShowOPModal(true) }}>
+            <i className="fas fa-plus me-1"></i>Nueva NP
+          </Button>
+        </div>
       </div>
 
       {error && <Alert variant="danger" dismissible onClose={() => setError(null)} className="py-2 small">{error}</Alert>}
@@ -288,14 +315,14 @@ export default function ProduccionPage() {
               </tr>
             </thead>
             <tbody>
-              {ops.length === 0 ? (
+              {opsFiltradas.length === 0 ? (
                 <tr>
                   <td colSpan={14} className="text-center text-muted py-4">
                     <i className="fas fa-industry fa-2x mb-2 d-block"></i>
                     No hay órdenes de producción
                   </td>
                 </tr>
-              ) : ops.map(op => (
+              ) : opsFiltradas.map(op => (
                 <React.Fragment key={op.id}>
                   <tr style={{ cursor: 'pointer' }}   className={opExpandida === op.id ? 'op-row-activa' : ''}>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>
