@@ -3,15 +3,20 @@ import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
 
 const initialForm = { fecha: '', turno: 'dia', maquina_id: '' }
 
-export default function ProduccionSelladoraModal({ show, onHide, onSave, opId, maquinas }) {
-  const [form, setForm] = useState(initialForm)
+export default function ProduccionSelladoraModal({ show, onHide, onSave, opId, maquinas, usuarios=[] }) {
+  const [form, setForm] = useState({ fecha: '', turno: 'dia', maquina_id: '', usuario_id: '' })
 
   useEffect(() => {
     if (show) {
       const hoy = new Date().toISOString().split('T')[0]
-      setForm({ ...initialForm, fecha: hoy, maquina_id: maquinas[0]?.id || '' })
+      setForm({ 
+        ...initialForm, 
+        fecha: hoy, 
+        maquina_id: maquinas[0]?.id || '',
+        usuario_id: usuarios[0]?.id || ''
+      })
     }
-  }, [show, maquinas])
+  }, [show, maquinas, usuarios])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -20,7 +25,7 @@ export default function ProduccionSelladoraModal({ show, onHide, onSave, opId, m
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave({ ...form, op_id: opId, maquina_id: parseInt(form.maquina_id) })
+    onSave({ ...form, op_id: opId, maquina_id: parseInt(form.maquina_id), usuario_id: form.usuario_id ? parseInt(form.usuario_id) : null })
   }
 
   return (
@@ -57,6 +62,15 @@ export default function ProduccionSelladoraModal({ show, onHide, onSave, opId, m
               {maquinas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
             </Form.Select>
           </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Operador <span className="text-danger">*</span></Form.Label>
+            <Form.Select name="usuario_id" value={form.usuario_id} onChange={handleChange} required>
+              <option value="">Seleccionar...</option>
+              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+            </Form.Select>
+          </Form.Group>
+
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide}>

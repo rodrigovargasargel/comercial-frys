@@ -10,8 +10,9 @@ import {
   getDetallesSelladora, createDetalleSelladora, deleteDetalleSelladora,
   getMaquinasSelladoras, getProductosSelladora
 } from '../../api/selladora'
-import { getEmpresas } from '../../api/selects'
+import { getEmpresas,getUsuarios } from '../../api/selects'
 import { getColores } from '../../api/produccion'
+
 
 import GuiaSelladoraModal from './GuiaSelladoraModal'
 
@@ -38,6 +39,7 @@ export default function SelladoraPage() {
   const [productos, setProductos] = useState([])
   const [colores, setColores] = useState([])
   const [maquinas, setMaquinas] = useState([])
+  const [usuarios, setUsuarios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -67,14 +69,16 @@ export default function SelladoraPage() {
   const cargarDatos = async () => {
     try {
       setLoading(true)
-      const [opsRes, empRes, colRes, maqRes, prodRes] = await Promise.all([
-        getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras(), getProductosSelladora()
+      const [opsRes, empRes, colRes, maqRes, prodRes,usrRes] = await Promise.all([
+        getOPsSelladora(), getEmpresas(), getColores(), getMaquinasSelladoras(), getProductosSelladora(),getUsuarios()
       ])
+      
       setOps(opsRes.data)
       setEmpresas(empRes.data)
       setColores(colRes.data)
       setMaquinas(maqRes.data)
       setProductos(prodRes.data)
+      setUsuarios(usrRes.data)
     } catch {
       setError('Error al cargar datos')
     } finally {
@@ -304,6 +308,7 @@ export default function SelladoraPage() {
                                 <tbody>
                                   {(producciones[op.id] || []).map(prod => (
                                     <React.Fragment key={prod.id}>
+                                      
                                       <tr style={{
                                         cursor: 'pointer',
                                         display: produccionExpandida && produccionExpandida !== prod.id ? 'none' : ''
@@ -325,6 +330,9 @@ export default function SelladoraPage() {
                                           <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
                                             {(detalles[prod.id] || []).length} rollos
                                           </Badge>
+                                        </td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}> <i class="fa fa-user"></i>
+                                              {prod.usuario?.nombre || '—'}
                                         </td>
                                         <td style={tdStyle}>
                                           <Button size="sm" variant="outline-danger"
@@ -349,7 +357,7 @@ export default function SelladoraPage() {
                                               zIndex: 30,
                                               display: 'inline-block',
                                               minWidth: 360,
-                                              maxWidth: 480
+                                              maxWidth: 680
                                             }}>
                                               <div className="px-3 py-2 border-bottom border-info d-flex justify-content-between align-items-center"
                                                 style={{ background: '#f0fbff', borderRadius: '6px 6px 0 0' }}>
@@ -500,6 +508,15 @@ export default function SelladoraPage() {
     empresas={empresas}
   />
     )}  
+
+    <ProduccionSelladoraModal
+      show={showProdModal}
+      onHide={() => setShowProdModal(false)}
+      onSave={handleGuardarProduccion}
+      opId={opIdParaProd}
+      maquinas={maquinas}
+      usuarios={usuarios}
+    />
     </Container>
   )
 }

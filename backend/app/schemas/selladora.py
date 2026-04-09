@@ -53,6 +53,7 @@ class ProduccionSelladoraCreate(BaseModel):
     maquina_id: int
     turno: str
     fecha: date
+    usuario_id: Optional[int] = None
 
 class ProduccionSelladoraOut(BaseModel):
     id: int
@@ -60,6 +61,7 @@ class ProduccionSelladoraOut(BaseModel):
     fecha: date
     turno: str
     maquina: Optional[SimpleOut] = None
+    usuario: Optional[SimpleOut] = None
     unidades_producidas: int = 0
     class Config:
         from_attributes = True
@@ -81,19 +83,7 @@ class ProduccionSelladoraDetalleCreate(BaseModel):
     kilos_producidos: Optional[float] = None 
     imprimir_kg: bool = False
 
-class ProduccionSelladoraDetalleOut(BaseModel):
-    id: int
-    detalle_extrusora_id: int
-    q_paquetes: int
-    q_unidades_por_paquete: int
-    unidades: int
-    kilos: float
-    kg_rollo_original: Optional[float] = None
-    imprimir_kg: bool = False
-    numero_rollo: int = 0
-    created_at: Optional[datetime] = None
-    class Config:
-        from_attributes = True
+
 
 class ProduccionSelladoraDetalleOut(BaseModel):
     id: int

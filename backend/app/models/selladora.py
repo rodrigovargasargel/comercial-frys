@@ -31,6 +31,8 @@ class ProduccionSelladora(Base):
     maquina_id = Column(Integer, ForeignKey("maquinas.id"), nullable=False)
     turno = Column(String(10), nullable=False)
     fecha = Column(Date, nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    usuario = relationship("Usuario")
 
     op = relationship("OPSelladora", back_populates="producciones")
     maquina = relationship("Maquina")
