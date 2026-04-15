@@ -274,7 +274,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
     
     # Nombre producto
-    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {op.ancho}x{op.largo}x{op.espesor}"
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {int(op.ancho)}x{int(op.largo)}x{int(op.espesor)}"
 
     DATA_START = HEADER_ROW + 1
     fila = DATA_START
