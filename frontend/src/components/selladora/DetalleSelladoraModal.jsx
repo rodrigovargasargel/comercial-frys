@@ -96,7 +96,7 @@ useEffect(() => {
                 <option value="">Seleccionar rollo...</option>
                 {rollos.map(r => (
                   <option key={r.id} value={r.id}>
-                    NP: {r.id} - Rollo #{String(r.numero_rollo).padStart(3, '0')} — {r.kg} kg — Lote {r.lote} — {r.fecha_produccion}
+                    NP: {op.id} - Rollo #{String(r.numero_rollo).padStart(3, '0')} — {r.kg} kg — Lote {r.lote} — {r.fecha_produccion}
                   </option>
                 ))}
               </Form.Select>
