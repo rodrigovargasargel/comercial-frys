@@ -3,16 +3,19 @@ import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap'
 import * as XLSX from 'xlsx'
 
 export default function PackingModal({ show, onHide, op, empresas, producciones, detalles, getProducciones, getDetalles }) {
-  const [form, setForm] = useState({ empresa_id: '', ref: '', fact: '' })
+  const [form, setForm] = useState({ empresa_id: '', ref: '', fact: '', fecha_fact: '' })
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+ 
 
   useEffect(() => {
     if (show && op) {
+      const hoy = new Date().toISOString().split('T')[0]
       setForm({
         empresa_id: op.empresa?.id || '',
         ref: op.oc_cliente || '',
-        fact: ''
+        fact: '',
+        fecha_fact: hoy
       })
       setError(null)
     }
@@ -40,7 +43,8 @@ export default function PackingModal({ show, onHide, op, empresas, producciones,
       body: JSON.stringify({
         cliente: clienteNombre,
         ref: form.ref,
-        fact: form.fact
+        fact: form.fact,
+        fecha_fact: form.fecha_fact
       })
     })
 
@@ -107,6 +111,11 @@ export default function PackingModal({ show, onHide, op, empresas, producciones,
             </Form.Group>
           </Col>
         </Row>
+        
+<Form.Group className="mb-3">
+  <Form.Label>Fecha Factura <span className="text-danger">*</span></Form.Label>
+  <Form.Control type="date" name="fecha_fact" value={form.fecha_fact} onChange={handleChange} required />
+</Form.Group>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>

@@ -146,6 +146,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
     # Obtener todos los detalles de selladora de esta OP
     prods = selladora_service.get_producciones_by_op(db, op_id)
     
+    
     thin = Side(style='thin')
     medium = Side(style='medium')
     border_full = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -165,6 +166,13 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
     hoy = date_type.today()
     fecha_str = hoy.strftime('%d/%m/%Y')
 
+    fecha_fact_raw = body.get('fecha_fact', '')
+    if fecha_fact_raw and '-' in fecha_fact_raw:
+        partes = fecha_fact_raw.split('-')
+        fecha_fact_str = f"{partes[2]}/{partes[1]}/{partes[0]}"
+    else:
+        fecha_fact_str = fecha_str
+
     # Nº
     ws['H4'] = 'Nº :'
     ws['H4'].font = Font(bold=True, size=10, color='1F3864')
@@ -174,7 +182,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
     ws['H3'] = 'N° de Informe :'
     ws['H3'].font = Font(bold=True, size=10, color='1F3864')
-    numero_informe = f"{hoy.strftime('%d%m%y')}-{op_id}"
+    numero_informe = f"{hoy.strftime('%d%m%y')}"
     ws['I3'] = numero_informe
     ws['I3'].font = Font(bold=True, size=10, color='1F3864')
     ws['I3'].alignment = Alignment(horizontal='center')
@@ -251,8 +259,22 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
    # Merge columnas C y D para Nombre Producto
     ws.merge_cells(f'C{HEADER_ROW}:D{HEADER_ROW}')
+    densidad_str = ''
+    for prod in prods:
+        dets = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id).first()
+        if dets and dets.detalle_extrusora and dets.detalle_extrusora.produccion:
+            from app.models.produccion import OrdenProduccion
+            op_ext = db.query(OrdenProduccion).filter(
+                OrdenProduccion.id == dets.detalle_extrusora.produccion.op_id
+            ).first()
+            if op_ext:
+                densidad_str = 'AD' if op_ext.densidad == 'alta' else 'BD'
+                break
+
+    
     # Nombre producto
-    nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.largo}x{op.espesor}"
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {op.ancho}x{op.largo}x{op.espesor}"
 
     DATA_START = HEADER_ROW + 1
     fila = DATA_START
@@ -282,7 +304,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
             valores = [
                 ('A', nro_guia),
-                ('B', fecha_str),
+                ('B', fecha_fact_str),
                 ('C', nombre_producto),
                 ('E', fecha_fab),
                 ('F', lote_rollo),

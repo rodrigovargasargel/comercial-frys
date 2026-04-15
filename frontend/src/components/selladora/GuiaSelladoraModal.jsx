@@ -3,17 +3,19 @@ import { Modal, Button, Form, Alert } from 'react-bootstrap'
 import { getOCs } from '../../api/produccion'
 
 export default function GuiaSelladoraModal({ show, onHide, op, empresas }) {
-  const [form, setForm] = useState({ empresa_id: '', nro_guia: '', oc_cliente: '' })
+  const [form, setForm] = useState({ empresa_id: '', nro_guia: '', oc_cliente: '', fecha_fact: '' })
   const [ocs, setOcs] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
   if (show && op) {
+    const hoy = new Date().toISOString().split('T')[0]
     setForm({
       empresa_id: op.empresa?.id || '',
       nro_guia: '',
-      oc_cliente: ''
+      oc_cliente: '',
+      fecha_fact: hoy
     })
     setError(null)
     cargarOCs(op.empresa?.id || null)
@@ -62,7 +64,8 @@ useEffect(() => {
         body: JSON.stringify({ 
           cliente: clienteNombre, 
           nro_guia: form.nro_guia,
-          oc_cliente: form.oc_cliente
+          oc_cliente: form.oc_cliente,
+          fecha_fact: form.fecha_fact
         })
       })
 
@@ -123,6 +126,16 @@ useEffect(() => {
             placeholder="Ej: 1478"
           />
         </Form.Group>
+        <Form.Group className="mb-3">
+        <Form.Label>Fecha Factura <span className="text-danger">*</span></Form.Label>
+        <Form.Control
+          type="date"
+          name="fecha_fact"
+          value={form.fecha_fact}
+          onChange={handleChange}
+          required
+        />
+      </Form.Group>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>

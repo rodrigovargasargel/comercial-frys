@@ -131,10 +131,17 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     op = produccion_service.get_op_by_id(db, op_id)
     if not op:
         raise HTTPException(status_code=404, detail="OP no encontrada")
-
+    hoy = date_type.today()
+    fecha_str = hoy.strftime('%d/%m/%Y')  # ← debe estar antes
     cliente = body.get('cliente', '')
     ref = body.get('ref', '')
     fact = body.get('fact', '')
+    fecha_fact_str = body.get('fecha_fact', fecha_str)
+
+    # Formatear fecha_fact si viene como YYYY-MM-DD
+    if fecha_fact_str and '-' in fecha_fact_str:
+         partes = fecha_fact_str.split('-')
+    fecha_fact_str = f"{partes[2]}/{partes[1]}/{partes[0]}"
 
     prods = produccion_service.get_producciones_by_op(db, op_id)
     from app.models.produccion import DetalleProduccionExtrusora
@@ -150,7 +157,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws = wb.active
     ws.title = str(fact)
 
-    anchos = [3, 10, 14, 14, 32, 10, 14, 8, 10]
+    anchos = [3, 10, 14, 40, 10, 14, 8, 10]
     for i, w in enumerate(anchos, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
@@ -160,12 +167,19 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     # Nº
 
     hoy = date_type.today()
-    numero_packing = f"{hoy.strftime('%d%m%y')}-{op_id}" 
-    ws['G2'] = 'Nº :'
+    numero_packing = f"{hoy.strftime('%d%m%y')}" 
+   
+    ws['G2'] = 'Nº DOC :'
     ws['G2'].font = Font(bold=True, size=10, color='1F3864')
     ws['I2'] = numero_packing
     ws['I2'].font = Font(bold=True, size=12, color='1F3864')
     ws['I2'].alignment = Alignment(horizontal='center')
+
+    ws['G3'] = 'NP :'
+    ws['G3'].font = Font(bold=True, size=10, color='1F3864')
+    ws['I3'] = op_id
+    ws['I3'].font = Font(bold=True, size=12, color='1F3864')
+    ws['I3'].alignment = Alignment(horizontal='center')
 
     # Empresa
     empresa_rows = [
@@ -221,7 +235,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws['D18'].font = Font(size=10)
 
     # Encabezado tabla
-    headers = [('B','FACT'),('C','FECHA'),('D',''),('E','NOMBRE PRODUCTO'),
+    headers = [('B','FACT'),('C','FECHA'),('D','NOMBRE PRODUCTO'),
            ('F','LOTE'),('G','FECHA PROD.'),('H','ROLLO'),('I','KG')]
     HEADER_ROW = 21
     ws.row_dimensions[HEADER_ROW].height = 18
@@ -232,6 +246,18 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         c.fill = subheader_fill
         c.border = border_full
         c.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Merge D y E para NOMBRE PRODUCTO
+    ws.merge_cells(f'D{HEADER_ROW}:E{HEADER_ROW}')
+    e_header = ws[f'E{HEADER_ROW}']
+    e_header.fill = subheader_fill
+    e_header.border = Border(
+        top=Side(style='thin'),
+        right=Side(style='thin'),
+        bottom=Side(style='thin'),
+        left=Side(style=None)  # sin borde izquierdo
+    )
+   
 
     # Datos
     #nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {op.densidad}"
@@ -251,9 +277,8 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
             ws.row_dimensions[fila].height = 15
             valores = [
                 ('B', int(fact) if str(fact).isdigit() else fact),
-                ('C', fecha_str),
-                ('D', ''),
-                ('E', nombre_producto),
+                ('C', fecha_fact_str),
+                ('D', nombre_producto),
                 ('F', prod.lote),
                 ('G', fecha_prod),
                 ('H', det.numero_rollo if primera else f'=H{fila-1}+1'),
@@ -269,17 +294,33 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
                     c.alignment = Alignment(horizontal='center')
             primera = False
             fila += 1
+            ws.merge_cells(f'D{fila}:E{fila}')
+             # Aplicar formato a celda E también
+            e_cell = ws[f'E{fila}']
+            e_cell.fill = fill
+            e_cell.border = Border(
+                top=Side(style='thin'),
+                right=Side(style='thin'),
+                bottom=Side(style='thin'),
+                left=Side(style=None)  # sin borde izquierdo
+            )
+            
 
     # Total
     total_row = fila
     ws.row_dimensions[total_row].height = 18
-    ws.merge_cells(f'B{total_row}:H{total_row}')
+    ws.merge_cells(f'B{total_row}:G{total_row}')
     c = ws[f'B{total_row}']
     c.value = 'TOTAL'
     c.font = Font(bold=True, size=11, color='FFFFFF')
     c.fill = header_fill
     c.alignment = Alignment(horizontal='right', vertical='center')
     c.border = border_full
+    ws.merge_cells(f'B{total_row}:H{total_row}')
+    # Agregar formato a H del total
+    h_total = ws[f'H{total_row}']
+    h_total.fill = header_fill
+    h_total.border = border_full
     tc = ws[f'I{total_row}']
     tc.value = f'=SUM(I{DATA_START}:I{fila-1})'
     tc.font = Font(bold=True, size=11, color='FFFFFF')
