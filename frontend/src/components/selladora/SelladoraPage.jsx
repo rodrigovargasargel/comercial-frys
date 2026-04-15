@@ -90,15 +90,22 @@ export default function SelladoraPage() {
 
   useEffect(() => { cargarDatos() }, [])
 
-  const toggleOP = async (opId) => {
-    if (opExpandida === opId) { setOpExpandida(null); return }
-    setOpExpandida(opId)
-    setProduccionExpandida(null)
-    if (!producciones[opId]) {
-      const { data } = await getProduccionesSelladora(opId)
-      setProducciones(prev => ({ ...prev, [opId]: data }))
+ const toggleOP = async (opId) => {
+      if (opExpandida === opId) { setOpExpandida(null); return }
+      setOpExpandida(opId)
+      setProduccionExpandida(null)
+      if (!producciones[opId]) {
+        const { data } = await getProduccionesSelladora(opId)
+        setProducciones(prev => ({ ...prev, [opId]: data }))
+        // Cargar detalles de todos los turnos para mostrar rollos y packs
+        for (const prod of data) {
+          if (!detalles[prod.id]) {
+            const { data: dets } = await getDetallesSelladora(prod.id)
+            setDetalles(prev => ({ ...prev, [prod.id]: dets }))
+          }
+        }
+      }
     }
-  }
 
   const toggleProduccion = async (prodId) => {
     if (produccionExpandida === prodId) { setProduccionExpandida(null); return }
