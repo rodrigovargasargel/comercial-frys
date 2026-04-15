@@ -167,7 +167,7 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     # Nº
 
     hoy = date_type.today()
-    numero_packing = f"{hoy.strftime('%d%m%y')}" 
+    numero_packing = f"{hoy.strftime('%m%d%y')}" 
    
     ws['G2'] = 'Nº DOC :'
     ws['G2'].font = Font(bold=True, size=10, color='1F3864')

@@ -182,7 +182,7 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
 
     ws['H3'] = 'N° de Informe :'
     ws['H3'].font = Font(bold=True, size=10, color='1F3864')
-    numero_informe = f"{hoy.strftime('%d%m%y')}"
+    numero_informe = f"{hoy.strftime('%m%d%y')}"
     ws['I3'] = numero_informe
     ws['I3'].font = Font(bold=True, size=10, color='1F3864')
     ws['I3'].alignment = Alignment(horizontal='center')

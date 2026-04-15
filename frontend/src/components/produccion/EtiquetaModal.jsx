@@ -52,7 +52,7 @@ export default function EtiquetaModal({ show, onHide, detalle, produccion, op })
             </div>
 
             <div style={{ fontSize: 16, fontWeight: 'bold' }}>
-              LOTE: {produccion.lote}
+              LOTE: {produccion.lote} — NP: {op.id} 
             </div>
 
             <div>
