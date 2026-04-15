@@ -74,8 +74,8 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 <div style={{ fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
                     COMERCIAL FRYS LTDA
                 </div>
-                <div style={{ fontSize: 10, color: '#444' }}>www.comercialfrys.cl</div>
-                <div style={{ fontSize: 10, color: '#444' }}>Cel: +569 96797817 | rmolina@comercialfrys.cl</div>
+                <div style={{ fontSize: 12, color: '#444' }}>www.comercialfrys.cl</div>
+                <div style={{ fontSize: 12, color: '#444' }}>Cel: +569 96797817 | rmolina@comercialfrys.cl</div>
                 </div>
 
                 {/* Producto */}
@@ -105,7 +105,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 </div>
 
                 {/* Pie */}
-                <div style={{ borderTop: '1px solid black', paddingTop: 4, fontSize: 10 }}>
+                <div style={{ borderTop: '1px solid black', paddingTop: 4, fontSize: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span><strong>Elab:</strong> {fechaElaboracion}</span>
                     <span><strong>Vence:</strong> {fechaVencimiento}</span>
