@@ -104,7 +104,8 @@ def rollos_disponibles(color_id: int, ancho: float, espesor: float, db: Session 
             numero_rollo=r.numero_rollo,
             kg=r.kg,
             lote=r.produccion.lote if r.produccion else '',
-            fecha_produccion=r.produccion.fecha if r.produccion else None
+            fecha_produccion=r.produccion.fecha if r.produccion else None,
+            op_id=r.produccion.op_id if r.produccion else None  # ← agregar
         ) for r in rollos
     ]
 

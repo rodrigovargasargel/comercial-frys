@@ -72,6 +72,7 @@ class DetalleExtrusoraDisponible(BaseModel):
     kg: float
     lote: str
     fecha_produccion: date
+    op_id: Optional[int] = None
     class Config:
         from_attributes = True
 
