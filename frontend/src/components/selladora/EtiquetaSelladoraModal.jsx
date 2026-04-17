@@ -85,7 +85,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
 
                 {/* Medidas */}
                 <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 2 }}>
-                {op.ancho} × {op.largo} × {op.espesor} mcr
+                {op.ancho} × {op.largo} × {op.espesor} µ
                 </div>
 
                 {/* Unidades */}

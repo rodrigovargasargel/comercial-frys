@@ -107,13 +107,13 @@ export default function OPModal({ show, onHide, onSave, op, productos, colores, 
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Ancho (Combo) <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Ancho (cm) <span className="text-danger">*</span></Form.Label>
                 <Form.Control type="number" name="ancho" value={form.ancho} onChange={handleChange} required placeholder="0" />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Espesor (mcr) <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Espesor (µ) <span className="text-danger">*</span></Form.Label>
                 <Form.Control type="number" name="espesor" value={form.espesor} onChange={handleChange} required placeholder="0" />
               </Form.Group>
             </Col>
