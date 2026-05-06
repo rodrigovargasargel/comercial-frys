@@ -41,7 +41,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
       <Modal.Header closeButton className="bg-warning">
         <Modal.Title>
           <i className="fas fa-box-open me-2"></i>
-          Pack Parcial — Rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
+          Pack Adicional — Rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
         </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
@@ -50,7 +50,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
 
           <div className="mb-3 p-2 bg-light rounded small">
             <i className="fas fa-info-circle me-1 text-info"></i>
-            Pack parcial adicional del rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
+            Pack  adicional del rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
           </div>
 
           <Form.Group className="mb-3">
@@ -100,7 +100,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
             <i className="fas fa-times me-1"></i> Cancelar
           </Button>
           <Button variant="warning" type="submit">
-            <i className="fas fa-save me-1"></i> Guardar Pack Parcial
+            <i className="fas fa-save me-1"></i> Guardar Pack Adicional
           </Button>
         </Modal.Footer>
       </Form>
