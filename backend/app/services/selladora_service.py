@@ -125,10 +125,18 @@ def get_rollos_disponibles(db: Session, color_id: int, ancho: float, espesor: fl
     return rollos
 
 def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
-    usado = db.query(ProduccionSelladoraDetalle)\
-        .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id).first()
-    if usado:
-        raise ValueError("Este rollo ya fue usado en otra producción")
+    if not data.es_pack_parcial:
+        usado = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id)\
+            .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).first()
+        if usado:
+            raise ValueError("Este rollo ya fue usado en otra producción")
+    else:
+        pack_parcial_existente = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id)\
+            .filter(ProduccionSelladoraDetalle.es_pack_parcial == True).first()
+        if pack_parcial_existente:
+            raise ValueError("Este rollo ya tiene un pack parcial registrado")
 
     rollo = db.query(DetalleProduccionExtrusora)\
         .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
@@ -136,7 +144,6 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         raise ValueError("Rollo no encontrado")
 
     unidades = data.q_paquetes * data.q_unidades_por_paquete
-    # Usar kilos_producidos si fue editado, sino usar los kg del rollo
     kilos = data.kilos_producidos if data.kilos_producidos is not None else rollo.kg
 
     detalle = ProduccionSelladoraDetalle(
@@ -146,49 +153,14 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         q_unidades_por_paquete=data.q_unidades_por_paquete,
         unidades=unidades,
         kilos=kilos,
-        imprimir_kg=data.imprimir_kg
+        imprimir_kg=data.imprimir_kg,
+        mostrar_titulo=data.mostrar_titulo,
+        es_pack_parcial=data.es_pack_parcial
     )
     db.add(detalle)
     db.commit()
     db.refresh(detalle)
 
-    prod = db.query(ProduccionSelladora)\
-        .filter(ProduccionSelladora.id == data.produccion_selladora_id).first()
-    if prod:
-        op = db.query(OPSelladora).filter(OPSelladora.id == prod.op_id).first()
-        if op:
-            total = _unidades_producidas_op(db, op.id)
-            if total >= op.unidades:
-                op.estado = "completada"
-                db.commit()
-
-    detalle.numero_rollo = rollo.numero_rollo
-    return detalle    
-    # Verificar que el rollo no esté usado
-    usado = db.query(ProduccionSelladoraDetalle)\
-        .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id).first()
-    if usado:
-        raise ValueError("Este rollo ya fue usado en otra producción")
-
-    rollo = db.query(DetalleProduccionExtrusora)\
-        .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
-    if not rollo:
-        raise ValueError("Rollo no encontrado")
-
-    unidades = data.q_paquetes * data.q_unidades_por_paquete
-    detalle = ProduccionSelladoraDetalle(
-        produccion_selladora_id=data.produccion_selladora_id,
-        detalle_extrusora_id=data.detalle_extrusora_id,
-        q_paquetes=data.q_paquetes,
-        q_unidades_por_paquete=data.q_unidades_por_paquete,
-        unidades=unidades,
-        kilos=rollo.kg
-    )
-    db.add(detalle)
-    db.commit()
-    db.refresh(detalle)
-
-    # Verificar si OP quedó completada
     prod = db.query(ProduccionSelladora)\
         .filter(ProduccionSelladora.id == data.produccion_selladora_id).first()
     if prod:
@@ -201,6 +173,7 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
 
     detalle.numero_rollo = rollo.numero_rollo
     return detalle
+
 
 def delete_detalle(db: Session, detalle_id: int):
     det = db.query(ProduccionSelladoraDetalle)\

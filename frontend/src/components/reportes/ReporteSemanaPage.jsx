@@ -60,13 +60,18 @@ export default function ReporteSemanaPage() {
   const thBase = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '4px 6px', whiteSpace: 'nowrap', textAlign: 'center' }
   const tdBase = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '3px 6px', whiteSpace: 'nowrap' }
 
-  const renderSeccion = (rows, titulo, colorFila, unidad) => {
-    if (!rows || rows.length === 0) return (
-      <tr>
-        <td colSpan={12} className="text-center text-muted py-2 small">Sin datos de {titulo}</td>
-      </tr>
-    )
-    return rows.map((row, idx) => (
+ const renderSeccion = (rows, titulo, colorFila, unidad) => {
+  if (!rows || rows.length === 0) return (
+    <tr>
+      <td colSpan={13} className="text-center text-muted py-2 small">Sin datos de {titulo}</td>
+    </tr>
+  )
+  return rows.map((row, idx) => {
+    const totalDia = reporte.dias.reduce((sum, dia) => sum + (row.dia[dia] || 0), 0)
+    const totalNoche = reporte.dias.reduce((sum, dia) => sum + (row.noche[dia] || 0), 0)
+    const total = totalDia + totalNoche
+
+    return (
       <tr key={idx} style={{ background: idx % 2 === 0 ? colorFila : '#fafafa' }}>
         <td style={{ ...tdBase, fontSize: 'clamp(9px,1vw,11px)', color: '#777' }}></td>
         <td style={{ ...tdBase, textAlign: 'left' }}>{row.label}</td>
@@ -80,9 +85,13 @@ export default function ReporteSemanaPage() {
             {row.noche[dia] || '—'}
           </td>
         ))}
+        <td style={{ ...tdBase, fontWeight: 'bold', color: '#1a472a', background: '#d4edda' }}>
+          {total > 0 ? total : '—'}
+        </td>
       </tr>
-    ))
-  }
+    )
+  })
+}
 
   return (
     <Container fluid className="py-3 px-2 px-md-4">
@@ -135,6 +144,7 @@ export default function ReporteSemanaPage() {
                 <th colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>
                   <i className="fas fa-moon me-1"></i>TURNO NOCHE
                 </th>
+                <th style={{ ...thBase, background: '#1a472a', color: 'white' }}>TOTAL</th>
               </tr>
               {/* Fila fechas */}
               <tr>
@@ -155,26 +165,18 @@ export default function ReporteSemanaPage() {
             <tbody>
               {/* Sección Extrusora */}
               <tr>
-                <td colSpan={2} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
-                  <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
-                </td>
-                <td colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>                 
-                </td>
-                <td colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>                  
-                </td>
-              </tr>
+                  <td colSpan={13} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
+                    <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
+                  </td>
+                </tr>
               {renderSeccion(reporte.extrusora, 'Extrusora', '#EBF3FB', 'kg')}
 
               {/* Sección Selladora */}
               <tr>
-                <td colSpan={2} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
-                  <i className="fas fa-cut me-2"></i>SELLADORA (UNIDADES)
-                </td>
-                <td colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>                 
-                </td>
-                <td colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>                  
-                </td>
-              </tr>
+                  <td colSpan={13} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
+                    <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
+                  </td>
+                </tr>
               {renderSeccion(reporte.selladora, 'Selladora', '#FFF8E1', 'unidades')}
             </tbody>
           </Table>

@@ -61,6 +61,19 @@ def eliminar_produccion(prod_id: int, db: Session = Depends(get_db)):
     if not selladora_service.delete_produccion(db, prod_id):
         raise HTTPException(status_code=404, detail="No encontrado")
 
+@router.put("/producciones/{prod_id}")
+def actualizar_produccion(prod_id: int, body: dict, db: Session = Depends(get_db)):
+    from app.models.selladora import ProduccionSelladora
+    prod = db.query(ProduccionSelladora).filter(ProduccionSelladora.id == prod_id).first()
+    if not prod:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    for field in ['fecha', 'turno', 'maquina_id', 'usuario_id']:
+        if field in body:
+            setattr(prod, field, body[field])
+    db.commit()
+    db.refresh(prod)
+    return selladora_service._enrich_produccion(db, prod)        
+
 @router.get("/producciones/{prod_id}/detalles", response_model=List[ProduccionSelladoraDetalleOut])
 def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
     from app.models.produccion import OrdenProduccion
@@ -87,6 +100,8 @@ def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
                 kilos=d.kilos,
                 kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else None,  # ← este
                 imprimir_kg=d.imprimir_kg,
+                mostrar_titulo=d.mostrar_titulo,
+                es_pack_parcial=d.es_pack_parcial,
                 numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
                 lote_extrusora=lote,
                 fecha_extrusora=fecha,
@@ -120,6 +135,24 @@ def crear_detalle(data: ProduccionSelladoraDetalleCreate, db: Session = Depends(
 def eliminar_detalle(detalle_id: int, db: Session = Depends(get_db)):
     if not selladora_service.delete_detalle(db, detalle_id):
         raise HTTPException(status_code=404, detail="No encontrado")
+
+
+@router.put("/detalles/{detalle_id}")
+def actualizar_detalle(detalle_id: int, body: dict, db: Session = Depends(get_db)):
+    from app.models.selladora import ProduccionSelladoraDetalle
+    det = db.query(ProduccionSelladoraDetalle)\
+        .filter(ProduccionSelladoraDetalle.id == detalle_id).first()
+    if not det:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    det.q_paquetes = body.get('q_paquetes', det.q_paquetes)
+    det.q_unidades_por_paquete = body.get('q_unidades_por_paquete', det.q_unidades_por_paquete)
+    det.unidades = det.q_paquetes * det.q_unidades_por_paquete
+    det.kilos = body.get('kilos_producidos', det.kilos)
+    det.imprimir_kg = body.get('imprimir_kg', det.imprimir_kg)
+    det.mostrar_titulo = body.get('mostrar_titulo', det.mostrar_titulo)
+    db.commit()
+    db.refresh(det)
+    return {'id': det.id, 'unidades': det.unidades, 'kilos': det.kilos}        
 
 @router.get("/productos-selladora")
 def listar_productos_selladora(db: Session = Depends(get_db)):

@@ -44,12 +44,14 @@ class ProduccionSelladoraDetalle(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     produccion_selladora_id = Column(Integer, ForeignKey("produccion_selladora.id"), nullable=False)
-    detalle_extrusora_id = Column(Integer, ForeignKey("detalle_produccion_extrusora.id"), nullable=False, unique=True)
+    detalle_extrusora_id = Column(Integer, ForeignKey("detalle_produccion_extrusora.id"), nullable=False)
     q_paquetes = Column(Integer, nullable=False)
     q_unidades_por_paquete = Column(Integer, nullable=False)
     unidades = Column(Integer, nullable=False)
     kilos = Column(Float, nullable=False)
     imprimir_kg = Column(Boolean, default=False, nullable=False)
+    mostrar_titulo = Column(Boolean, default=True, nullable=False)
+    es_pack_parcial = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
     produccion = relationship("ProduccionSelladora", back_populates="detalles")

@@ -121,6 +121,17 @@ def listar_ocs(empresa_id: int = None, db: Session = Depends(get_db)):
         query = query.filter(OrdenProduccion.empresa_id == empresa_id)
     ocs = query.distinct().all()
     return [oc[0] for oc in ocs]   
+
+@router.put("/detalles/{detalle_id}")
+def actualizar_detalle(detalle_id: int, body: dict, db: Session = Depends(get_db)):
+    from app.models.produccion import DetalleProduccionExtrusora
+    det = db.query(DetalleProduccionExtrusora).filter(DetalleProduccionExtrusora.id == detalle_id).first()
+    if not det:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    det.kg = body.get('kg', det.kg)
+    db.commit()
+    db.refresh(det)
+    return {'id': det.id, 'kg': det.kg}    
     
 #excel con formato bonito
 

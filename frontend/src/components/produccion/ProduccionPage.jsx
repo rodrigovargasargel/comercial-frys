@@ -20,6 +20,9 @@ import { getMaquinas, getEmpresas, getUsuarios } from '../../api/selects'
 import EditarProduccionModal from './EditarProduccionModal'
 import { updateProduccion } from '../../api/produccion'
 
+import EditarDetalleModal from './EditarDetalleModal'
+import { updateDetalle } from '../../api/produccion'
+
 const handleEditarProduccion = async (prodId, data) => {
   try {
     await updateProduccion(prodId, data)
@@ -79,6 +82,8 @@ export default function ProduccionPage() {
   const [showEditarProd, setShowEditarProd] = useState(false)
   const [produccionAEditar, setProduccionAEditar] = useState(null)
   const [busqueda, setBusqueda] = useState('')
+  const [showEditarDetalle, setShowEditarDetalle] = useState(false)
+  const [detalleAEditar, setDetalleAEditar] = useState(null)
 
   const cargarDatos = async () => {
     try {
@@ -199,6 +204,21 @@ export default function ProduccionPage() {
     setProducciones(prev => ({ ...prev, [opExpandida]: updatedProd }))
     cargarDatos()
   }
+
+  const handleEditarDetalle = async (detalleId, kg) => {
+  try {
+    await updateDetalle(detalleId, { kg })
+    setShowEditarDetalle(false)
+    setDetalleAEditar(null)
+    const { data } = await getDetalles(detalleAEditar.produccion_id)
+    setDetalles(prev => ({ ...prev, [detalleAEditar.produccion_id]: data }))
+    const { data: updatedProd } = await getProducciones(opExpandida)
+    setProducciones(prev => ({ ...prev, [opExpandida]: updatedProd }))
+    cargarDatos()
+  } catch (e) {
+    setError(e.response?.data?.detail || 'Error al editar rollo')
+  }
+}
 
   const handleVerEtiqueta = (detalle, produccion, op) => {
     setEtiquetaData({ detalle, produccion, op })
@@ -506,6 +526,14 @@ export default function ProduccionPage() {
                                                                 onClick={() => handleEliminarDetalle(det.id, prod.id)}>
                                                                 <i className="fas fa-trash"></i>
                                                               </Button>
+
+                                                              <Button size="sm" variant="outline-dark" className="me-1" style={btnStyle}
+                                                                  onClick={() => {
+                                                                    setDetalleAEditar({ ...det, produccion_id: prod.id })
+                                                                    setShowEditarDetalle(true)
+                                                                  }}>
+                                                                  <i className="fas fa-edit"></i>
+                                                                </Button>
                                                             </td>
                                                           </tr>
                                                         ))}
@@ -624,6 +652,14 @@ export default function ProduccionPage() {
         produccion={produccionAEditar}
         maquinas={maquinas}
         usuarios={usuarios}
+      />
+
+
+      <EditarDetalleModal
+        show={showEditarDetalle}
+        onHide={() => { setShowEditarDetalle(false); setDetalleAEditar(null) }}
+        onSave={handleEditarDetalle}
+        detalle={detalleAEditar}
       />
     </Container>
   )

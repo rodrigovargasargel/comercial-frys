@@ -2,19 +2,28 @@ import React, { useState, useEffect } from 'react'
 import { Container, Button, Alert, Spinner, Table, Badge } from 'react-bootstrap'
 import OPSelladoraModal from './OPSelladoraModal'
 import ProduccionSelladoraModal from './ProduccionSelladoraModal'
+
+import EditarProduccionSelladoraModal from './EditarProduccionSelladoraModal'
+import PackParcialModal from './PackParcialModal'
+
+
+
 import DetalleSelladoraModal from './DetalleSelladoraModal'
 import EtiquetaSelladoraModal from './EtiquetaSelladoraModal'
 import {
   getOPsSelladora, createOPSelladora, updateOPSelladora, deleteOPSelladora,
   getProduccionesSelladora, createProduccionSelladora, deleteProduccionSelladora,
   getDetallesSelladora, createDetalleSelladora, deleteDetalleSelladora,
-  getMaquinasSelladoras, getProductosSelladora
+  getMaquinasSelladoras, getProductosSelladora,updateProduccionSelladora
 } from '../../api/selladora'
 import { getEmpresas,getUsuarios } from '../../api/selects'
 import { getColores } from '../../api/produccion'
 
 
 import GuiaSelladoraModal from './GuiaSelladoraModal'
+
+import EditarDetalleSelladoraModal from './EditarDetalleSelladoraModal'
+import { updateDetalleSelladora } from '../../api/selladora'
 
 const estadoBadge = {
   pendiente: 'secondary', en_produccion: 'warning',
@@ -24,6 +33,8 @@ const estadoLabel = {
   pendiente: 'Pendiente', en_produccion: 'En producción',
   completada: 'Completada', cancelada: 'Cancelada'
 }
+
+
 
 
 
@@ -49,6 +60,9 @@ export default function SelladoraPage() {
   const [detalles, setDetalles] = useState({})
   const [hoveredProd, setHoveredProd] = useState(null)
 
+  const [showEditarProd, setShowEditarProd] = useState(false)
+  const [produccionAEditar, setProduccionAEditar] = useState(null)
+
   const [showOPModal, setShowOPModal] = useState(false)
   const [opSeleccionada, setOpSeleccionada] = useState(null)
   const [showProdModal, setShowProdModal] = useState(false)
@@ -56,6 +70,14 @@ export default function SelladoraPage() {
   const [showDetalleModal, setShowDetalleModal] = useState(false)
   const [prodIdParaDetalle, setProdIdParaDetalle] = useState(null)
   const [opParaDetalle, setOpParaDetalle] = useState(null)
+  const [showEditarDetalle, setShowEditarDetalle] = useState(false)
+  const [detalleAEditar, setDetalleAEditar] = useState(null)
+  const [produccionIdParaEditar, setProduccionIdParaEditar] = useState(null)
+
+  const [showPackParcial, setShowPackParcial] = useState(false)
+  const [detalleParaParcial, setDetalleParaParcial] = useState(null)
+  const [produccionIdParaParcial, setProduccionIdParaParcial] = useState(null)
+
   const [showEtiqueta, setShowEtiqueta] = useState(false)
   const [etiquetaData, setEtiquetaData] = useState({ detalle: null, produccion: null, op: null })
 
@@ -89,6 +111,8 @@ export default function SelladoraPage() {
   }
 
   useEffect(() => { cargarDatos() }, [])
+
+  
 
  const toggleOP = async (opId) => {
       if (opExpandida === opId) { setOpExpandida(null); return }
@@ -154,6 +178,18 @@ export default function SelladoraPage() {
     cargarDatos()
   }
 
+  const handleEditarProduccion = async (prodId, data) => {
+  try {
+          await updateProduccionSelladora(prodId, data)
+          setShowEditarProd(false)
+          setProduccionAEditar(null)
+          const { data: updated } = await getProduccionesSelladora(opExpandida)
+          setProducciones(prev => ({ ...prev, [opExpandida]: updated }))
+        } catch (e) {
+          setError(e.response?.data?.detail || 'Error al editar turno')
+        }
+      }
+
   const handleGuardarDetalle = async (data) => {
     try {
       await createDetalleSelladora(data)
@@ -177,6 +213,37 @@ export default function SelladoraPage() {
     setProducciones(prev => ({ ...prev, [opExpandida]: updatedProd }))
     cargarDatos()
   }
+
+  const handleEditarDetalle = async (detalleId, data) => {
+  try {
+    await updateDetalleSelladora(detalleId, data)
+    setShowEditarDetalle(false)
+    setDetalleAEditar(null)
+    const { data: updatedDets } = await getDetallesSelladora(produccionIdParaEditar)
+    setDetalles(prev => ({ ...prev, [produccionIdParaEditar]: updatedDets }))
+    const { data: updatedProd } = await getProduccionesSelladora(opExpandida)
+    setProducciones(prev => ({ ...prev, [opExpandida]: updatedProd }))
+    cargarDatos()
+  } catch (e) {
+    setError(e.response?.data?.detail || 'Error al editar rollo')
+  }
+}
+
+
+const handleGuardarPackParcial = async (data) => {
+  try {
+    await createDetalleSelladora(data)
+    setShowPackParcial(false)
+    setDetalleParaParcial(null)
+    const { data: updatedDets } = await getDetallesSelladora(produccionIdParaParcial)
+    setDetalles(prev => ({ ...prev, [produccionIdParaParcial]: updatedDets }))
+    const { data: updatedProd } = await getProduccionesSelladora(opExpandida)
+    setProducciones(prev => ({ ...prev, [opExpandida]: updatedProd }))
+    cargarDatos()
+  } catch (e) {
+    setError(e.response?.data?.detail || 'Error al guardar pack parcial')
+  }
+}
 
   const opsFiltradas = ops.filter(op => {
   if (!busqueda.trim()) return true
@@ -232,9 +299,9 @@ export default function SelladoraPage() {
                 <th style={thStyle}>Fecha</th>
                 <th style={thStyle}>Producto</th>
                 <th style={thStyle}>Color</th>
-                <th style={thStyle}>Ancho</th>
-                <th style={thStyle}>Esp.</th>
+                <th style={thStyle}>Ancho</th>                
                 <th style={thStyle}>Largo</th>
+                <th style={thStyle}>Esp.</th>
                 <th style={thStyle}>Unid. Ped.</th>
                 <th style={thStyle}>Unid. Prod.</th>
                 <th style={thStyle}>Unid. Falt.</th>
@@ -263,8 +330,9 @@ export default function SelladoraPage() {
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.producto?.nombre}</td>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.color?.nombre}</td>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.ancho} cm</td>
-                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.espesor} µ</td>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.largo} cm</td>
+                    <td style={tdStyle} onClick={() => toggleOP(op.id)}>{op.espesor} µ</td>
+                    
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}><strong>{op.unidades.toLocaleString()}</strong></td>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>
                       <span className="text-success fw-bold">{op.unidades_producidas.toLocaleString()}</span>
@@ -377,7 +445,12 @@ export default function SelladoraPage() {
                                               {prod.usuario?.nombre || '—'}
                                         </td>
                                         <td style={tdStyle}>
-                                          <Button size="sm" variant="outline-danger"
+                                          <Button size="sm" title="Editar Turno" variant="outline-dark" className="me-1"
+                                                        style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                                        onClick={() => { setProduccionAEditar(prod); setShowEditarProd(true) }}>
+                                                        <i className="fas fa-edit"></i>
+                                                      </Button>
+                                                                                              <Button size="sm" variant="outline-danger"
                                             style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
                                             onClick={() => handleEliminarProduccion(prod.id, op.id)}>
                                             <i className="fas fa-trash"></i>
@@ -436,21 +509,45 @@ export default function SelladoraPage() {
                                                           <td style={tdStyle}>{det.q_paquetes} Packs</td>
                                                           <td style={tdStyle}>{det.q_unidades_por_paquete} u. p/p</td>
                                                           <td style={tdStyle}><strong>{det.unidades.toLocaleString()} Unid.</strong></td>
-                                                          <td style={tdStyle}>
-                                                            <Button size="sm" variant="outline-info" className="me-1" style={btnStyle}
+                                                        <td style={tdStyle}>
+                                                            {det.es_pack_parcial && (
+                                                              <Badge bg="warning" text="dark" className="me-1" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
+                                                                Parcial
+                                                              </Badge>
+                                                            )}
+                                                            <Button size="sm" title="Ver Etiqueta" variant="outline-info" className="me-1" style={btnStyle}
                                                               onClick={() => {
-                                                                console.log(det)
                                                                 setEtiquetaData({ detalle: det, produccion: prod, op, imprimir_kg: det.imprimir_kg })
                                                                 setShowEtiqueta(true)
                                                               }}>
                                                               <i className="fas fa-tag"></i>
                                                             </Button>
-                                                            <Button size="sm" variant="outline-danger" style={btnStyle}
+                                                            <Button size="sm" title="Eliminar Registro" variant="outline-danger" style={btnStyle}
                                                               onClick={() => handleEliminarDetalle(det.id, prod.id)}>
                                                               <i className="fas fa-trash"></i>
                                                             </Button>
+                                                            <Button size="sm" title="Editar Registro" variant="outline-dark" className="me-1" style={btnStyle}
+                                                              onClick={() => {
+                                                                setDetalleAEditar(det)
+                                                                setProduccionIdParaEditar(prod.id)
+                                                                setShowEditarDetalle(true)
+                                                              }}>
+                                                              <i className="fas fa-edit"></i>
+                                                            </Button>
+                                                            {!det.es_pack_parcial && (
+                                                              <Button size="sm"  variant="outline-warning" className="me-1" style={btnStyle}
+                                                                title="Agregar pack parcial"
+                                                                onClick={() => {
+                                                                  setDetalleParaParcial(det)
+                                                                  setProduccionIdParaParcial(prod.id)
+                                                                  setShowPackParcial(true)
+                                                                }}>
+                                                                <i className="fas fa-box-open"></i>
+                                                              </Button>
+                                                            )}
+                                                            
                                                           </td>
-                                                        </tr>
+                                                                                                                  </tr>
                                                       ))}
                                                     </tbody>
                                                   </Table>
@@ -559,6 +656,38 @@ export default function SelladoraPage() {
       maquinas={maquinas}
       usuarios={usuarios}
     />
+
+    {detalleAEditar && (
+  <EditarDetalleSelladoraModal
+    show={showEditarDetalle}
+    onHide={() => { setShowEditarDetalle(false); setDetalleAEditar(null) }}
+    onSave={handleEditarDetalle}
+    detalle={detalleAEditar}
+    op={ops.find(o => o.id === opExpandida)}
+  />
+)}
+
+
+    {produccionAEditar && (
+  <EditarProduccionSelladoraModal
+    show={showEditarProd}
+    onHide={() => { setShowEditarProd(false); setProduccionAEditar(null) }}
+    onSave={handleEditarProduccion}
+    produccion={produccionAEditar}
+    maquinas={maquinas}
+    usuarios={usuarios}
+  />
+)}  
+
+{detalleParaParcial && (
+  <PackParcialModal
+    show={showPackParcial}
+    onHide={() => { setShowPackParcial(false); setDetalleParaParcial(null) }}
+    onSave={handleGuardarPackParcial}
+    detalle={detalleParaParcial}
+    produccionId={produccionIdParaParcial}
+  />
+)}
     </Container>
   )
 }

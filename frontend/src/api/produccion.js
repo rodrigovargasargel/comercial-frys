@@ -22,3 +22,5 @@ export const updateProduccion = (id, data) => API.put(`/produccion/producciones/
 
 export const getOCs = (empresa_id = null) => 
   API.get('/produccion/ocs', { params: empresa_id ? { empresa_id } : {} })
+
+export const updateDetalle = (id, data) => API.put(`/produccion/detalles/${id}`, data) // update rollo extrusion

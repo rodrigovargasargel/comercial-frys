@@ -83,6 +83,8 @@ class ProduccionSelladoraDetalleCreate(BaseModel):
     q_unidades_por_paquete: int
     kilos_producidos: Optional[float] = None 
     imprimir_kg: bool = False
+    mostrar_titulo: bool = True
+    es_pack_parcial: bool = False
 
 
 
@@ -95,6 +97,8 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     kilos: float
     kg_rollo_original: Optional[float] = None
     imprimir_kg: bool = False
+    mostrar_titulo: bool = True
+    es_pack_parcial: bool = False
     numero_rollo: int = 0
     lote_extrusora: Optional[str] = None
     fecha_extrusora: Optional[date] = None

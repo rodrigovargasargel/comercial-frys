@@ -49,21 +49,22 @@ def get_semana_datos(db: Session, lunes: date):
 
     # --- SELLADORA: unidades por producto/color/ancho/espesor por fecha y turno ---
     sell_rows = db.query(
-        OPSelladora.producto_id,
-        OPSelladora.color_id,
-        OPSelladora.ancho,
-        OPSelladora.espesor,
-        ProduccionSelladora.fecha,
-        ProduccionSelladora.turno,
-        func.sum(ProduccionSelladoraDetalle.unidades).label('total_unidades')
-    ).join(ProduccionSelladora, ProduccionSelladora.op_id == OPSelladora.id)\
-     .join(ProduccionSelladoraDetalle, ProduccionSelladoraDetalle.produccion_selladora_id == ProduccionSelladora.id)\
-     .filter(ProduccionSelladora.fecha >= lunes, ProduccionSelladora.fecha <= viernes)\
-     .group_by(
-         OPSelladora.producto_id, OPSelladora.color_id,
-         OPSelladora.ancho, OPSelladora.espesor,
-         ProduccionSelladora.fecha, ProduccionSelladora.turno
-     ).all()
+    OPSelladora.producto_id,
+    OPSelladora.color_id,
+    OPSelladora.ancho,
+    OPSelladora.espesor,
+    OPSelladora.largo,  # ← agregar aquí
+    ProduccionSelladora.fecha,
+    ProduccionSelladora.turno,
+    func.sum(ProduccionSelladoraDetalle.unidades).label('total_unidades')
+        ).join(ProduccionSelladora, ProduccionSelladora.op_id == OPSelladora.id)\
+        .join(ProduccionSelladoraDetalle, ProduccionSelladoraDetalle.produccion_selladora_id == ProduccionSelladora.id)\
+        .filter(ProduccionSelladora.fecha >= lunes, ProduccionSelladora.fecha <= viernes)\
+        .group_by(
+            OPSelladora.producto_id, OPSelladora.color_id,
+            OPSelladora.ancho, OPSelladora.espesor, OPSelladora.largo,
+            ProduccionSelladora.fecha, ProduccionSelladora.turno
+        ).all()
 
     return dias, ext_rows, sell_rows
 
@@ -104,12 +105,15 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
         fecha_str = r.fecha.isoformat()
         ext_data[key][r.turno][fecha_str] = round(float(r.total_kg), 2)
 
-    # Agrupar selladora
+   # Agrupar selladora
     sell_data = {}
     for r in sell_rows:
-        key = f"SELL|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}"
+        key = f"SELL|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}x{r.largo}"
         if key not in sell_data:
-            sell_data[key] = {'label': f"UNID {get_producto(r.producto_id)} {get_color(r.color_id)} {r.ancho}x{r.espesor}", 'dia': {}, 'noche': {}}
+            sell_data[key] = {
+                'label': f"UNID {get_producto(r.producto_id)} {get_color(r.color_id)} {int(r.ancho)}x{int(r.espesor)}x{int(r.largo)}",
+                'dia': {}, 'noche': {}
+            }
         fecha_str = r.fecha.isoformat()
         sell_data[key][r.turno][fecha_str] = int(r.total_unidades)
 

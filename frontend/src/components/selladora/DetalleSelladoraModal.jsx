@@ -5,12 +5,12 @@ import { getRollosDisponibles } from '../../api/selladora'
 export default function DetalleSelladoraModal({ show, onHide, onSave, produccionId, op }) {
   const [rollos, setRollos] = useState([])
   const [loadingRollos, setLoadingRollos] = useState(false)
- const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false })
+ const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false, mostrar_titulo: true })
   const [error, setError] = useState(null)
 
   useEffect(() => {
   if (show && op) {
-    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false })
+    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false, mostrar_titulo: true})
     setError(null)
     cargarRollos()
   }
@@ -52,13 +52,17 @@ useEffect(() => {
     setError('Todos los campos son obligatorios')
     return
   }
+
+ 
+
   onSave({
     produccion_selladora_id: produccionId,
     detalle_extrusora_id: parseInt(form.detalle_extrusora_id),
     q_paquetes: parseInt(form.q_paquetes),
     q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
     kilos_producidos: parseFloat(form.kilos_producidos) || rolloSeleccionado?.kg || 0,
-    imprimir_kg: form.imprimir_kg
+    imprimir_kg: form.imprimir_kg,
+    mostrar_titulo: form.mostrar_titulo
   })
 }
   return (
@@ -122,13 +126,22 @@ useEffect(() => {
                   <Col md={6}>
                   <Form.Check
                       type="checkbox"
-                      label="Imprimir KG en la etiqueta"
+                      label="KG en la etiqueta"
                       checked={form.imprimir_kg}
                       onChange={e => setForm(prev => ({ ...prev, imprimir_kg: e.target.checked }))}
                       className="mt-2"
                 
                   />
                   </Col>
+                  <Col md={6}>
+                  <Form.Check
+                    type="checkbox"
+                    label="Título en etiqueta"
+                    checked={form.mostrar_titulo}
+                    onChange={e => setForm(prev => ({ ...prev, mostrar_titulo: e.target.checked }))}
+                    className="mt-2"
+                  />
+                </Col>
                 </Form.Group>
 
                 </Row>
