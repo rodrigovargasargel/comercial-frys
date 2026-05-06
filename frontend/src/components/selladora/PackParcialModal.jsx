@@ -54,7 +54,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
           </div>
 
           <Form.Group className="mb-3">
-            <Form.Label>Unidades del pack parcial <span className="text-danger">*</span></Form.Label>
+            <Form.Label>Unidades del pack adicional <span className="text-danger">*</span></Form.Label>
             <Form.Control
               type="number"
               name="unidades"
