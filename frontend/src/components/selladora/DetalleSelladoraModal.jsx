@@ -5,12 +5,12 @@ import { getRollosDisponibles } from '../../api/selladora'
 export default function DetalleSelladoraModal({ show, onHide, onSave, produccionId, op }) {
   const [rollos, setRollos] = useState([])
   const [loadingRollos, setLoadingRollos] = useState(false)
- const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false, mostrar_titulo: true })
+ const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', kilos_imp: '', imprimir_kg: false, mostrar_titulo: true })
   const [error, setError] = useState(null)
 
   useEffect(() => {
   if (show && op) {
-    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false, mostrar_titulo: true})
+    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', kilos_imp: '', imprimir_kg: false, mostrar_titulo: true})
     setError(null)
     cargarRollos()
   }
@@ -20,7 +20,7 @@ useEffect(() => {
   if (form.detalle_extrusora_id) {
     const rollo = rollos.find(r => r.id === parseInt(form.detalle_extrusora_id))
     if (rollo) {
-      setForm(prev => ({ ...prev, kilos_producidos: rollo.kg }))
+      setForm(prev => ({ ...prev, kilos_producidos: rollo.kg_disponibles }))
     }
   }
 }, [form.detalle_extrusora_id, rollos])
@@ -46,23 +46,31 @@ useEffect(() => {
   const rolloSeleccionado = rollos.find(r => r.id === parseInt(form.detalle_extrusora_id))
   const unidadesCalculadas = (parseInt(form.q_paquetes) || 0) * (parseInt(form.q_unidades_por_paquete) || 0)
 
-  const handleSubmit = (e) => {
+ const handleSubmit = (e) => {
   e.preventDefault()
   if (!form.detalle_extrusora_id || !form.q_paquetes || !form.q_unidades_por_paquete) {
     setError('Todos los campos son obligatorios')
     return
   }
 
- 
+  const kgIngresados = parseFloat(form.kilos_producidos) || 0
+  const kgDisponibles = rolloSeleccionado?.kg_disponibles || 0
+
+  if (kgIngresados > kgDisponibles) {
+    setError(`Los kg ingresados (${kgIngresados}) superan los kg disponibles del rollo (${kgDisponibles} kg)`)
+    return
+  }
 
   onSave({
     produccion_selladora_id: produccionId,
     detalle_extrusora_id: parseInt(form.detalle_extrusora_id),
     q_paquetes: parseInt(form.q_paquetes),
     q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
-    kilos_producidos: parseFloat(form.kilos_producidos) || rolloSeleccionado?.kg || 0,
+    kilos_producidos: kgIngresados,
     imprimir_kg: form.imprimir_kg,
-    mostrar_titulo: form.mostrar_titulo
+    kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
+    mostrar_titulo: form.mostrar_titulo,
+    es_pack_parcial: false
   })
 }
   return (
@@ -100,7 +108,7 @@ useEffect(() => {
                 <option value="">Seleccionar rollo...</option>
                 {rollos.map(r => (
                   <option key={r.id} value={r.id}>
-                    NP: {r.op_id} - Rollo #{String(r.numero_rollo).padStart(3, '0')} — {r.kg} kg — Lote {r.lote} — {r.fecha_produccion}
+                    NP: {r.op_id} — Rollo #{String(r.numero_rollo).padStart(3, '0')} — {r.kg_disponibles} kg (kg originales: {r.kg} kg) — Lote {r.lote} — {r.fecha_produccion}
                   </option>
                 ))}
               </Form.Select>
@@ -110,23 +118,47 @@ useEffect(() => {
           {/* Info rollo seleccionado */}
           {rolloSeleccionado && (
                 <Row>
-                <Form.Group className="mb-3">
-                  <Col md={6}>
-                  
-                  <Form.Label>Kilos x PACK <span className="text-danger">*</span></Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    name="kilos_producidos"
-                    value={form.kilos_producidos}
-                    onChange={handleChange}
-                    required
-                  />
-                  </Col>
+                   <div className="mb-12 p-2 bg-light rounded small">
+                  <i className="fas fa-info-circle me-1 text-info"></i>
+                                   
+                  <span className="text-success fw-bold ms-1">Disponibles: {rolloSeleccionado.kg_disponibles} kg</span>
+                   </div>
+                <Form.Group className="mb-12">
+                  <row>
+                   <Col md={12}>
+                      <Col md={6}>
+                      
+                      <Form.Label>Kilos consumidos del rollo <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="kilos_producidos"
+                        value={form.kilos_producidos}
+                        onChange={handleChange}
+                        required
+                      />
+                      </Col>
+                      <hr></hr>
+                      <Col md={6}>
+                        <Form.Group className="mb-6">
+                          <Form.Label>Kilos a imprimir en etiqueta</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.01"
+                            name="kilos_imp"
+                            value={form.kilos_imp}
+                            onChange={handleChange}
+                            placeholder="opcional"
+                          />
+                          <Form.Text className="text-muted">Aparece en la etiqueta si imprimir KG está activo</Form.Text>
+                        </Form.Group>
+                      </Col>
+                   </Col>
+                   </row>
                   <Col md={6}>
                   <Form.Check
                       type="checkbox"
-                      label="KG en la etiqueta"
+                      label="Imprimir KG en la etiqueta"
                       checked={form.imprimir_kg}
                       onChange={e => setForm(prev => ({ ...prev, imprimir_kg: e.target.checked }))}
                       className="mt-2"

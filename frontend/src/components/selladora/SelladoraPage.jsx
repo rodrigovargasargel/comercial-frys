@@ -21,9 +21,12 @@ import { getColores } from '../../api/produccion'
 
 
 import GuiaSelladoraModal from './GuiaSelladoraModal'
+import ScrapModal from './ScrapModal'
 
 import EditarDetalleSelladoraModal from './EditarDetalleSelladoraModal'
-import { updateDetalleSelladora } from '../../api/selladora'
+import { updateDetalleSelladora, updateScrap } from '../../api/selladora'
+
+
 
 const estadoBadge = {
   pendiente: 'secondary', en_produccion: 'warning',
@@ -45,6 +48,7 @@ const formatFecha = (fecha) => {
 }
 
 export default function SelladoraPage() {
+ 
   const [ops, setOps] = useState([])
   const [empresas, setEmpresas] = useState([])
   const [productos, setProductos] = useState([])
@@ -83,6 +87,9 @@ export default function SelladoraPage() {
 
   const [showGuia, setShowGuia] = useState(false)
   const [opParaGuia, setOpParaGuia] = useState(null)
+
+  const [showScrap, setShowScrap] = useState(false)
+  const [produccionParaScrap, setProduccionParaScrap] = useState(null)
 
   const thStyle = { fontSize: 'clamp(11px, 1.2vw, 13px)', whiteSpace: 'nowrap', padding: '6px 8px' }
   const tdStyle = { fontSize: 'clamp(11px, 1.2vw, 13px)', padding: '5px 8px', whiteSpace: 'nowrap' }
@@ -242,6 +249,18 @@ const handleGuardarPackParcial = async (data) => {
     cargarDatos()
   } catch (e) {
     setError(e.response?.data?.detail || 'Error al guardar pack parcial')
+  }
+}
+
+const handleGuardarScrap = async (prodId, scrap) => {
+  try {
+    await updateScrap(prodId, scrap)
+    setShowScrap(false)
+    setProduccionParaScrap(null)
+    const { data: updated } = await getProduccionesSelladora(opExpandida)
+    setProducciones(prev => ({ ...prev, [opExpandida]: updated }))
+  } catch (e) {
+    setError('Error al guardar scrap')
   }
 }
 
@@ -444,6 +463,12 @@ const handleGuardarPackParcial = async (data) => {
                                         <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}> <i className="fa fa-user"></i>
                                               {prod.usuario?.nombre || '—'}
                                         </td>
+                                        <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
+                                        {prod.scrap > 0 
+                                          ? <span className="text-warning fw-bold">{prod.scrap} kg Scrap</span>
+                                          : <span className="text-muted">—</span>
+                                        }
+                                      </td>
                                         <td style={tdStyle}>
                                           <Button size="sm" title="Editar Turno" variant="outline-dark" className="me-1"
                                                         style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
@@ -455,6 +480,15 @@ const handleGuardarPackParcial = async (data) => {
                                             onClick={() => handleEliminarProduccion(prod.id, op.id)}>
                                             <i className="fas fa-trash"></i>
                                           </Button>
+
+                                          <Button size="sm" 
+                                              variant={prod.scrap > 0 ? 'warning' : 'outline-warning'}
+                                              className="me-1"
+                                              style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                              title="Scrap"
+                                              onClick={() => { setProduccionParaScrap(prod); setShowScrap(true) }}>
+                                              <i className="fas fa-recycle"></i>
+                                            </Button>
                                         </td>
                                       </tr>
 
@@ -686,6 +720,15 @@ const handleGuardarPackParcial = async (data) => {
     onSave={handleGuardarPackParcial}
     detalle={detalleParaParcial}
     produccionId={produccionIdParaParcial}
+  />
+)}
+
+{produccionParaScrap && (
+  <ScrapModal
+    show={showScrap}
+    onHide={() => { setShowScrap(false); setProduccionParaScrap(null) }}
+    onSave={handleGuardarScrap}
+    produccion={produccionParaScrap}
   />
 )}
     </Container>

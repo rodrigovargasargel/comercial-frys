@@ -12,7 +12,8 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
         q_unidades_por_paquete: detalle.q_unidades_por_paquete,
         kilos_producidos: detalle.kilos,
         imprimir_kg: detalle.imprimir_kg || false,
-        mostrar_titulo: detalle.mostrar_titulo !== false
+        mostrar_titulo: detalle.mostrar_titulo !== false,
+        kilos_imp: detalle.kilos_imp || ''
       })
       setError(null)
     }
@@ -37,7 +38,8 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
       q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
       kilos_producidos: parseFloat(form.kilos_producidos),
       imprimir_kg: form.imprimir_kg,
-      mostrar_titulo: form.mostrar_titulo
+      mostrar_titulo: form.mostrar_titulo,
+      kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
     })
   }
 

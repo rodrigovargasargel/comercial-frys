@@ -33,6 +33,7 @@ class ProduccionSelladora(Base):
     fecha = Column(Date, nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     usuario = relationship("Usuario")
+    scrap = Column(Float, nullable=True, default=0)
 
     op = relationship("OPSelladora", back_populates="producciones")
     maquina = relationship("Maquina")
@@ -49,6 +50,7 @@ class ProduccionSelladoraDetalle(Base):
     q_unidades_por_paquete = Column(Integer, nullable=False)
     unidades = Column(Integer, nullable=False)
     kilos = Column(Float, nullable=False)
+    kilos_imp = Column(Float, nullable=True)
     imprimir_kg = Column(Boolean, default=False, nullable=False)
     mostrar_titulo = Column(Boolean, default=True, nullable=False)
     es_pack_parcial = Column(Boolean, default=False, nullable=False)

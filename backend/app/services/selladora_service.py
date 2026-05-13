@@ -94,43 +94,67 @@ def get_detalles_by_produccion(db: Session, prod_id: int):
     return detalles
 
 def get_rollos_disponibles(db: Session, color_id: int, ancho: float, espesor: float):
-    # Buscar detalles extrusora que coincidan y no estén usados en selladora
-    usados = db.query(ProduccionSelladoraDetalle.detalle_extrusora_id).subquery()
-    rollos = db.query(DetalleProduccionExtrusora)\
-        .join(ProduccionExtrusora)\
-        .join(OPSelladora.__table__,
-              (OPSelladora.color_id == color_id) &
-              (OPSelladora.ancho == ancho) &
-              (OPSelladora.espesor == espesor),
-              isouter=True)\
-        .filter(
-            DetalleProduccionExtrusora.id.notin_(usados)
-        ).all()
-
-    # Filtrar por OP extrusora que tenga mismo color, ancho, espesor
     from app.models.produccion import OrdenProduccion
+    from sqlalchemy import func
+
     ops_match = db.query(OrdenProduccion.id).filter(
         OrdenProduccion.color_id == color_id,
         OrdenProduccion.ancho == ancho,
         OrdenProduccion.espesor == espesor
     ).subquery()
 
-    rollos = db.query(DetalleProduccionExtrusora)\
-        .join(ProduccionExtrusora, DetalleProduccionExtrusora.produccion_extrusora_id == ProduccionExtrusora.id)\
-        .filter(
-            ProduccionExtrusora.op_id.in_(ops_match),
-            DetalleProduccionExtrusora.id.notin_(usados)
-        ).all()
+    kg_usados = db.query(
+        ProduccionSelladoraDetalle.detalle_extrusora_id,
+        func.sum(ProduccionSelladoraDetalle.kilos).label('total_usado')
+    ).filter(
+        ProduccionSelladoraDetalle.es_pack_parcial == False
+    ).group_by(
+        ProduccionSelladoraDetalle.detalle_extrusora_id
+    ).subquery()
 
-    return rollos
+    rollos = db.query(
+        DetalleProduccionExtrusora,
+        (DetalleProduccionExtrusora.kg - func.coalesce(kg_usados.c.total_usado, 0)).label('kg_disponibles')
+    ).join(
+        ProduccionExtrusora,
+        DetalleProduccionExtrusora.produccion_extrusora_id == ProduccionExtrusora.id
+    ).outerjoin(
+        kg_usados,
+        DetalleProduccionExtrusora.id == kg_usados.c.detalle_extrusora_id
+    ).filter(
+        ProduccionExtrusora.op_id.in_(ops_match),
+        (DetalleProduccionExtrusora.kg - func.coalesce(kg_usados.c.total_usado, 0)) > 0
+    ).all()
+
+    print(f"Rollos encontrados: {len(rollos)}")
+    for rollo, kg_disp in rollos:
+        print(f"  Rollo {rollo.id}: kg_original={rollo.kg}, kg_disponibles={kg_disp}")
+
+    result = []
+    for rollo, kg_disponibles in rollos:
+        rollo.kg_disponibles = round(float(kg_disponibles), 2)
+        result.append(rollo)
+
+    return result
 
 def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
     if not data.es_pack_parcial:
-        usado = db.query(ProduccionSelladoraDetalle)\
+        # Calcular kg disponibles del rollo
+        kg_usados = db.query(func.sum(ProduccionSelladoraDetalle.kilos))\
             .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id)\
-            .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).first()
-        if usado:
-            raise ValueError("Este rollo ya fue usado en otra producción")
+            .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).scalar() or 0
+
+        rollo = db.query(DetalleProduccionExtrusora)\
+            .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
+        if not rollo:
+            raise ValueError("Rollo no encontrado")
+
+        kg_disponibles = rollo.kg - kg_usados
+        if kg_disponibles <= 0:
+            raise ValueError("Este rollo no tiene kg disponibles")
+
+        if data.kilos_producidos and data.kilos_producidos > kg_disponibles:
+            raise ValueError(f"Los kg ingresados ({data.kilos_producidos}) superan los disponibles ({round(kg_disponibles, 2)} kg)")
     else:
         pack_parcial_existente = db.query(ProduccionSelladoraDetalle)\
             .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == data.detalle_extrusora_id)\
@@ -138,10 +162,10 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         if pack_parcial_existente:
             raise ValueError("Este rollo ya tiene un pack parcial registrado")
 
-    rollo = db.query(DetalleProduccionExtrusora)\
-        .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
-    if not rollo:
-        raise ValueError("Rollo no encontrado")
+        rollo = db.query(DetalleProduccionExtrusora)\
+            .filter(DetalleProduccionExtrusora.id == data.detalle_extrusora_id).first()
+        if not rollo:
+            raise ValueError("Rollo no encontrado")
 
     unidades = data.q_paquetes * data.q_unidades_por_paquete
     kilos = data.kilos_producidos if data.kilos_producidos is not None else rollo.kg
@@ -153,6 +177,7 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         q_unidades_por_paquete=data.q_unidades_por_paquete,
         unidades=unidades,
         kilos=kilos,
+        kilos_imp=data.kilos_imp,
         imprimir_kg=data.imprimir_kg,
         mostrar_titulo=data.mostrar_titulo,
         es_pack_parcial=data.es_pack_parcial

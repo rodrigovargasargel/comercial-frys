@@ -63,6 +63,7 @@ class ProduccionSelladoraOut(BaseModel):
     maquina: Optional[SimpleOut] = None
     usuario: Optional[SimpleOut] = None
     unidades_producidas: int = 0
+    scrap: Optional[float] = 0
     class Config:
         from_attributes = True
 
@@ -70,6 +71,7 @@ class DetalleExtrusoraDisponible(BaseModel):
     id: int
     numero_rollo: int
     kg: float
+    kg_disponibles: float = 0
     lote: str
     fecha_produccion: date
     op_id: Optional[int] = None
@@ -83,8 +85,10 @@ class ProduccionSelladoraDetalleCreate(BaseModel):
     q_unidades_por_paquete: int
     kilos_producidos: Optional[float] = None 
     imprimir_kg: bool = False
+    kilos_imp: Optional[float] = None
     mostrar_titulo: bool = True
     es_pack_parcial: bool = False
+    pythonkilos_imp: Optional[float] = None
 
 
 

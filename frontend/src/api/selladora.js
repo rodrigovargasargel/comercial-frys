@@ -23,3 +23,5 @@ export const getProductosSelladora = () => API.get('/selladora/productos-sellado
 
 export const updateProduccionSelladora = (id, data) => API.put(`/selladora/producciones/${id}`, data)
 
+export const updateScrap = (id, scrap) => API.put(`/selladora/producciones/${id}/scrap`, { scrap })
+
