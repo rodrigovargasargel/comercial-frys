@@ -48,10 +48,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <div className="mb-3 p-2 bg-light rounded small">
-            <i className="fas fa-info-circle me-1 text-info"></i>
-            Pack  adicional del rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
-          </div>
+         
 
           <Form.Group className="mb-3">
             <Form.Label>Unidades del pack Saldo <span className="text-danger">*</span></Form.Label>
