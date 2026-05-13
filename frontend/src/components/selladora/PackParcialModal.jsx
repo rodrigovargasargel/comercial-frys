@@ -97,7 +97,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
             <i className="fas fa-times me-1"></i> Cancelar
           </Button>
           <Button variant="warning" type="submit">
-            <i className="fas fa-save me-1"></i> Guardar Pack Adicional
+            <i className="fas fa-save me-1"></i> Guardar Pack Saldo
           </Button>
         </Modal.Footer>
       </Form>
