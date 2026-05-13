@@ -41,7 +41,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
       <Modal.Header closeButton className="bg-warning">
         <Modal.Title>
           <i className="fas fa-box-open me-2"></i>
-          Pack Adicional — Rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
+          Pack Saldo — Rollo #{String(detalle?.numero_rollo || 0).padStart(3, '0')}
         </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
@@ -54,7 +54,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
           </div>
 
           <Form.Group className="mb-3">
-            <Form.Label>Unidades del pack adicional <span className="text-danger">*</span></Form.Label>
+            <Form.Label>Unidades del pack Saldo <span className="text-danger">*</span></Form.Label>
             <Form.Control
               type="number"
               name="unidades"
@@ -68,7 +68,7 @@ export default function PackParcialModal({ show, onHide, onSave, detalle, produc
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Kg del pack parcial <span className="text-danger">*</span></Form.Label>
+            <Form.Label>Kg del pack Saldo <span className="text-danger">*</span></Form.Label>
             <Form.Control
               type="number"
               step="0.01"
