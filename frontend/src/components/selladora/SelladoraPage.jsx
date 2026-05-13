@@ -546,7 +546,7 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                         <td style={tdStyle}>
                                                             {det.es_pack_parcial && (
                                                               <Badge bg="warning" text="dark" className="me-1" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
-                                                                Adicional
+                                                                SALDO
                                                               </Badge>
                                                             )}
                                                             <Button size="sm" title="Ver Etiqueta" variant="outline-info" className="me-1" style={btnStyle}
@@ -570,7 +570,7 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                             </Button>
                                                             {!det.es_pack_parcial && (
                                                               <Button size="sm"  variant="outline-warning" className="me-1" style={btnStyle}
-                                                                title="Agregar pack adicional"
+                                                                title="Agregar pack Saldo"
                                                                 onClick={() => {
                                                                   setDetalleParaParcial(det)
                                                                   setProduccionIdParaParcial(prod.id)
