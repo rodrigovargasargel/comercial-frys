@@ -96,6 +96,8 @@ export default function SelladoraPage() {
   const btnStyle = { padding: '2px 6px', fontSize: 'clamp(10px, 1vw, 12px)' }
 
   const [busqueda, setBusqueda] = useState('')
+  const [hoveredOP, setHoveredOP] = useState(null) //estados hover de botones np_sellado
+  const [hoveredDet, setHoveredDet] = useState(null) //estados hover de botones rollos_sellado
 
   const cargarDatos = async () => {
     try {
@@ -339,8 +341,14 @@ const handleGuardarScrap = async (prodId, scrap) => {
                 </tr>
               ) : opsFiltradas.map(op => (
                 <React.Fragment key={op.id}>
-                  <tr style={{ cursor: 'pointer' }}
-                    className={opExpandida === op.id ? 'op-row-activa' : ''}>
+                 <tr style={{ 
+                      cursor: 'pointer',
+                      opacity: op.estado === 'completada' && hoveredOP !== op.id ? 0.4 : 1,
+                      background: op.estado === 'completada' && hoveredOP !== op.id ? '#175ca0' : ''
+                    }}
+                      className={opExpandida === op.id ? 'op-row-activa' : ''}
+                      onMouseEnter={() => setHoveredOP(op.id)}
+                      onMouseLeave={() => setHoveredOP(null)}>
                     <td style={tdStyle} onClick={() => toggleOP(op.id)}>
                       <i className={`fas fa-chevron-${opExpandida === op.id ? 'down' : 'right'} text-muted`}></i>
                     </td>
@@ -369,17 +377,20 @@ const handleGuardarScrap = async (prodId, scrap) => {
 
                       {op.estado === 'pendiente' && (
                         <Button size="sm" variant="outline-danger" style={btnStyle}
+                        style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                           onClick={() => handleEliminarOP(op.id)}>
                           <i className="fas fa-trash"></i>
                         </Button>
                       )}
                       <Button size="sm" variant="outline-dark" className="me-1" style={btnStyle}
+                      style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                         onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
                         <i className="fas fa-edit"></i>
                       </Button>
                       
 
                       <Button size="sm" variant="outline-primary" className="me-1" style={btnStyle}
+                       style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                           onClick={() => { setOpParaGuia(op); setShowGuia(true) }}>
                           <i className="fas fa-truck"></i>
                         </Button>
@@ -465,7 +476,7 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                         </td>
                                         <td style={tdStyle} onClick={() => toggleProduccion(prod.id)}>
                                         {prod.scrap > 0 
-                                          ? <span className="text-warning fw-bold">{prod.scrap} kg Scrap</span>
+                                          ? <span className="text-success fw-bold">{prod.scrap} kg Scrap</span>
                                           : <span className="text-muted">—</span>
                                         }
                                       </td>
@@ -475,20 +486,23 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                         onClick={() => { setProduccionAEditar(prod); setShowEditarProd(true) }}>
                                                         <i className="fas fa-edit"></i>
                                                       </Button>
-                                                                                              <Button size="sm" variant="outline-danger"
-                                            style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
-                                            onClick={() => handleEliminarProduccion(prod.id, op.id)}>
-                                            <i className="fas fa-trash"></i>
-                                          </Button>
+                                          {(detalles[prod.id] || []).length === 0 && (
+                                            <Button size="sm" variant="outline-danger"
+                                              style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
+                                              onClick={() => handleEliminarProduccion(prod.id, op.id)}>
+                                              <i className="fas fa-trash"></i>
+                                            </Button>
+                                          )}
 
                                           <Button size="sm" 
-                                              variant={prod.scrap > 0 ? 'warning' : 'outline-warning'}
+                                              variant={prod.scrap > 0 ? 'warning' : 'outline-success'}
                                               className="me-1"
                                               style={{ ...btnStyle, visibility: hoveredProd === prod.id ? 'visible' : 'hidden' }}
                                               title="Scrap"
                                               onClick={() => { setProduccionParaScrap(prod); setShowScrap(true) }}>
                                               <i className="fas fa-recycle"></i>
                                             </Button>
+
                                         </td>
                                       </tr>
 
@@ -533,7 +547,9 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                     
                                                     <tbody>
                                                       {(detalles[prod.id] || []).map(det => (
-                                                        <tr key={det.id}>
+                                                        <tr key={det.id}
+                                                          onMouseEnter={() => setHoveredDet(det.id)}
+                                                          onMouseLeave={() => setHoveredDet(null)}>
                                                           <td style={tdStyle}>
                                                             <Badge bg="info" text="dark" style={{ fontSize: 'clamp(9px,1vw,11px)' }}>
                                                               #{String(det.numero_rollo).padStart(3, '0')}
@@ -549,18 +565,21 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                                 SALDO
                                                               </Badge>
                                                             )}
-                                                            <Button size="sm" title="Ver Etiqueta" variant="outline-info" className="me-1" style={btnStyle}
+                                                            <Button size="sm" title="Ver Etiqueta" variant="outline-info" className="me-1" 
+                                                              style={{ ...btnStyle, visibility: hoveredDet === det.id ? 'visible' : 'hidden' }}
                                                               onClick={() => {
                                                                 setEtiquetaData({ detalle: det, produccion: prod, op, imprimir_kg: det.imprimir_kg })
                                                                 setShowEtiqueta(true)
                                                               }}>
                                                               <i className="fas fa-tag"></i>
                                                             </Button>
-                                                            <Button size="sm" title="Eliminar Registro" variant="outline-danger" style={btnStyle}
+                                                            <Button size="sm" title="Eliminar Registro" variant="outline-danger"
+                                                              style={{ ...btnStyle, visibility: hoveredDet === det.id ? 'visible' : 'hidden' }}
                                                               onClick={() => handleEliminarDetalle(det.id, prod.id)}>
                                                               <i className="fas fa-trash"></i>
                                                             </Button>
-                                                            <Button size="sm" title="Editar Registro" variant="outline-dark" className="me-1" style={btnStyle}
+                                                            <Button size="sm" title="Editar Registro" variant="outline-dark" className="me-1" 
+                                                              style={{ ...btnStyle, visibility: hoveredDet === det.id ? 'visible' : 'hidden' }}
                                                               onClick={() => {
                                                                 setDetalleAEditar(det)
                                                                 setProduccionIdParaEditar(prod.id)
@@ -569,8 +588,9 @@ const handleGuardarScrap = async (prodId, scrap) => {
                                                               <i className="fas fa-edit"></i>
                                                             </Button>
                                                             {!det.es_pack_parcial && (
-                                                              <Button size="sm"  variant="outline-warning" className="me-1" style={btnStyle}
+                                                              <Button size="sm"  variant="outline-warning" className="me-1" 
                                                                 title="Agregar pack Saldo"
+                                                               style={{ ...btnStyle, visibility: hoveredDet === det.id ? 'visible' : 'hidden' }}
                                                                 onClick={() => {
                                                                   setDetalleParaParcial(det)
                                                                   setProduccionIdParaParcial(prod.id)

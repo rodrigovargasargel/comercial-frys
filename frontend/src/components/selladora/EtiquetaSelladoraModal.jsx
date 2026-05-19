@@ -98,11 +98,9 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                     <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
                       {detalle.q_unidades_por_paquete} <span style={{ fontSize: 14, fontWeight: 'normal' }}>unid. /</span>
                     </div>
-                     {detalle.imprimir_kg && (
+                     {detalle.imprimir_kg && detalle.kilos_imp !== null && detalle.kilos_imp !== undefined && (
                         <div style={{ fontSize: 34, fontWeight: 'bold', lineHeight: 1 }}>
-                          {detalle.kilos_imp !== null && detalle.kilos_imp !== undefined 
-                            ? detalle.kilos_imp 
-                            : detalle.kilos} 
+                          {detalle.kilos_imp}
                           <span style={{ fontSize: 14, fontWeight: 'normal' }}>kg</span>
                         </div>
                       )}

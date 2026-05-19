@@ -99,9 +99,9 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
     ext_data = {}
     for r in ext_rows:
         dens = 'AD' if r.densidad == 'alta' else 'BD'
-        key = f"EXT|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}|{dens}"
+        key = f"EXT|{get_producto(r.producto_id)}|{dens}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}"
         if key not in ext_data:
-            ext_data[key] = {'label': f"KG {get_producto(r.producto_id)} {get_color(r.color_id)} {r.ancho}x{r.espesor} {dens}", 'dia': {}, 'noche': {}}
+            ext_data[key] = {'label': f"KG {get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {r.ancho}x{r.espesor} ", 'dia': {}, 'noche': {}}
         fecha_str = r.fecha.isoformat()
         ext_data[key][r.turno][fecha_str] = round(float(r.total_kg), 2)
 
@@ -111,7 +111,7 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
         key = f"SELL|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}x{r.largo}"
         if key not in sell_data:
             sell_data[key] = {
-                'label': f"UNID {get_producto(r.producto_id)} {get_color(r.color_id)} {int(r.ancho)}x{int(r.espesor)}x{int(r.largo)}",
+                'label': f"UNID {get_producto(r.producto_id)} {get_color(r.color_id)} {int(r.ancho)}x{int(r.largo)}x{int(r.espesor)}",
                 'dia': {}, 'noche': {}
             }
         fecha_str = r.fecha.isoformat()

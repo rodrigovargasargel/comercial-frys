@@ -103,6 +103,8 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     imprimir_kg: bool = False
     mostrar_titulo: bool = True
     es_pack_parcial: bool = False
+    kilos_imp: Optional[float] = None
+
     numero_rollo: int = 0
     lote_extrusora: Optional[str] = None
     fecha_extrusora: Optional[date] = None

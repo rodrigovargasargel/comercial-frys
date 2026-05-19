@@ -136,27 +136,32 @@ def actualizar_detalle(detalle_id: int, body: dict, db: Session = Depends(get_db
 #excel con formato bonito
 
 @router.post("/ops/{op_id}/packing")
-
 def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     from datetime import date as date_type
+    import base64
+    from io import BytesIO
+    from openpyxl.drawing.image import Image as XLImage
+
     op = produccion_service.get_op_by_id(db, op_id)
     if not op:
         raise HTTPException(status_code=404, detail="OP no encontrada")
+
     hoy = date_type.today()
-    fecha_str = hoy.strftime('%d/%m/%Y')  # ← debe estar antes
+    fecha_str = hoy.strftime('%d/%m/%Y')
     cliente = body.get('cliente', '')
     ref = body.get('ref', '')
     fact = body.get('fact', '')
     fecha_fact_str = body.get('fecha_fact', fecha_str)
 
-    # Formatear fecha_fact si viene como YYYY-MM-DD
     if fecha_fact_str and '-' in fecha_fact_str:
-         partes = fecha_fact_str.split('-')
-    fecha_fact_str = f"{partes[2]}/{partes[1]}/{partes[0]}"
+        partes = fecha_fact_str.split('-')
+        fecha_fact_str = f"{partes[2]}/{partes[1]}/{partes[0]}"
+
+    numero_packing = f"{hoy.strftime('%m%d%y')}"
 
     prods = produccion_service.get_producciones_by_op(db, op_id)
     from app.models.produccion import DetalleProduccionExtrusora
-    
+
     thin = Side(style='thin')
     medium = Side(style='medium')
     border_full = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -168,18 +173,22 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws = wb.active
     ws.title = str(fact)
 
-    anchos = [3, 10, 14, 40, 10, 14, 8, 10]
+    # Logo
+    try:
+        with open('../assets/logo_frys.png', 'rb') as f:
+            img_data = f.read()
+        img_stream = BytesIO(img_data)
+        logo = XLImage(img_stream)
+        logo.width = 120
+        logo.height = 60
+        ws.add_image(logo, 'A1')
+    except:
+        pass
+
+    anchos = [3, 10, 14, 40, 10, 8, 16, 8, 10]
     for i, w in enumerate(anchos, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
-    hoy = date_type.today()
-    fecha_str = hoy.strftime('%d/%m/%Y')
-
-    # Nº
-
-    hoy = date_type.today()
-    numero_packing = f"{hoy.strftime('%m%d%y')}" 
-   
     ws['G2'] = 'Nº DOC :'
     ws['G2'].font = Font(bold=True, size=10, color='1F3864')
     ws['I2'] = numero_packing
@@ -192,7 +201,6 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws['I3'].font = Font(bold=True, size=12, color='1F3864')
     ws['I3'].alignment = Alignment(horizontal='center')
 
-    # Empresa
     empresa_rows = [
         (4, 'COMERCIALIZADORA Y DISTRIBUIDORA FRYS LTDA', True, 12),
         (5, 'RUT : 76386703-K', False, 10),
@@ -207,7 +215,6 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         c.value = val
         c.font = Font(bold=bold, size=size, color='1F3864')
 
-    # Título
     ws.merge_cells('B12:I13')
     c = ws['B12']
     c.value = 'PACKING LIST'
@@ -217,37 +224,32 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws.row_dimensions[12].height = 20
     ws.row_dimensions[13].height = 20
 
-    # Separador
     for col in range(2, 10):
         ws.cell(row=14, column=col).fill = PatternFill('solid', fgColor='2E75B6')
     ws.row_dimensions[14].height = 4
 
-    # A/TO y fecha
     ws['B16'] = 'A/TO :'
     ws['B16'].font = Font(bold=True, size=10, color='1F3864')
     ws['D16'] = cliente.upper()
     ws['D16'].font = Font(bold=True, size=11)
     ws['G16'] = 'FECHA/DATE :'
     ws['G16'].font = Font(bold=True, size=10, color='1F3864')
-    ws['G18'] = 'NOTA PEDIDO :'
-    ws['G18'].font = Font(bold=True, size=10, color='1F3864')
     ws['I16'] = fecha_str
     ws['I16'].font = Font(size=10)
     ws['I16'].alignment = Alignment(horizontal='center')
-
-    ws['I18'] = op_id
-    ws['I18'].font = Font(size=10)
-    ws['I18'].alignment = Alignment(horizontal='center')
-
 
     ws['B18'] = 'REF. :'
     ws['B18'].font = Font(bold=True, size=10, color='1F3864')
     ws['D18'] = ref
     ws['D18'].font = Font(size=10)
+    ws['G18'] = 'NOTA PEDIDO :'
+    ws['G18'].font = Font(bold=True, size=10, color='1F3864')
+    ws['I18'] = op_id
+    ws['I18'].font = Font(size=10)
+    ws['I18'].alignment = Alignment(horizontal='center')
 
-    # Encabezado tabla
     headers = [('B','FACT'),('C','FECHA'),('D','NOMBRE PRODUCTO'),
-           ('F','LOTE'),('G','FECHA PROD.'),('H','ROLLO'),('I','KG')]
+               ('F','LOTE'),('G','FECHA PROD.'),('H','ROLLO'),('I','KG')]
     HEADER_ROW = 21
     ws.row_dimensions[HEADER_ROW].height = 18
     for col, h in headers:
@@ -258,7 +260,6 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         c.border = border_full
         c.alignment = Alignment(horizontal='center', vertical='center')
 
-    # Merge D y E para NOMBRE PRODUCTO
     ws.merge_cells(f'D{HEADER_ROW}:E{HEADER_ROW}')
     e_header = ws[f'E{HEADER_ROW}']
     e_header.fill = subheader_fill
@@ -266,14 +267,11 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         top=Side(style='thin'),
         right=Side(style='thin'),
         bottom=Side(style='thin'),
-        left=Side(style=None)  # sin borde izquierdo
+        left=Side(style=None)
     )
-   
 
-    # Datos
-    #nombre_producto = f"{op.producto.nombre if op.producto else ''} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} {op.densidad}"
     densidad_str = 'AD' if op.densidad == 'alta' else 'BD'
-    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor} "
+    nombre_producto = f"{op.producto.nombre if op.producto else ''} {densidad_str} {op.color.nombre if op.color else ''} {op.ancho}x{op.espesor}"
     DATA_START = HEADER_ROW + 1
     fila = DATA_START
     primera = True
@@ -304,31 +302,26 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
                 if col in ('H', 'I'):
                     c.alignment = Alignment(horizontal='center')
             primera = False
-            fila += 1
             ws.merge_cells(f'D{fila}:E{fila}')
-             # Aplicar formato a celda E también
             e_cell = ws[f'E{fila}']
             e_cell.fill = fill
             e_cell.border = Border(
                 top=Side(style='thin'),
                 right=Side(style='thin'),
                 bottom=Side(style='thin'),
-                left=Side(style=None)  # sin borde izquierdo
+                left=Side(style=None)
             )
-            
+            fila += 1
 
-    # Total
     total_row = fila
     ws.row_dimensions[total_row].height = 18
-    ws.merge_cells(f'B{total_row}:G{total_row}')
+    ws.merge_cells(f'B{total_row}:H{total_row}')
     c = ws[f'B{total_row}']
     c.value = 'TOTAL'
     c.font = Font(bold=True, size=11, color='FFFFFF')
     c.fill = header_fill
     c.alignment = Alignment(horizontal='right', vertical='center')
     c.border = border_full
-    ws.merge_cells(f'B{total_row}:H{total_row}')
-    # Agregar formato a H del total
     h_total = ws[f'H{total_row}']
     h_total.fill = header_fill
     h_total.border = border_full
@@ -339,14 +332,12 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
     tc.border = border_full
     tc.alignment = Alignment(horizontal='center', vertical='center')
 
-    # Firma
     firma_row = total_row + 5
     for i, linea in enumerate(['Renzo Molina E.', 'Dpto. Comercial', 'F : 09-96797817', 'rmolina@comercialfrys.cl']):
         c = ws[f'B{firma_row+i}']
         c.value = linea
         c.font = Font(size=10, color='1F3864', italic=(i > 0))
 
-    # Stream
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
@@ -355,6 +346,5 @@ def generar_packing(op_id: int, body: dict, db: Session = Depends(get_db)):
         output,
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'}
-    )    
-
+    )
 

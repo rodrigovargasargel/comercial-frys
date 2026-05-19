@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap'
 
 export default function EditarDetalleSelladoraModal({ show, onHide, onSave, detalle, op }) {
-  const [form, setForm] = useState({ q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false, mostrar_titulo: true})
+  const [form, setForm] = useState({ q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false,  kilos_imp: '', mostrar_titulo: true})
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -28,20 +28,24 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
   const unidadesCalculadas = (parseInt(form.q_paquetes) || 0) * (parseInt(form.q_unidades_por_paquete) || 0)
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!form.q_paquetes || !form.q_unidades_por_paquete || !form.kilos_producidos) {
-      setError('Todos los campos son obligatorios')
-      return
-    }
-    onSave(detalle.id, {
-      q_paquetes: parseInt(form.q_paquetes),
-      q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
-      kilos_producidos: parseFloat(form.kilos_producidos),
-      imprimir_kg: form.imprimir_kg,
-      mostrar_titulo: form.mostrar_titulo,
-      kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
-    })
+  e.preventDefault()
+  const kgIngresados = parseFloat(form.kilos_producidos) || 0
+  const kgMax = detalle?.kg_rollo_original || 0
+
+  if (kgIngresados > kgMax) {
+    setError(`Los kg ingresados (${kgIngresados}) superan los kg originales del rollo (${kgMax} kg)`)
+    return
   }
+
+  onSave(detalle.id, {
+    q_paquetes: parseInt(form.q_paquetes),
+    q_unidades_por_paquete: parseInt(form.q_unidades_por_paquete),
+    kilos_producidos: kgIngresados,
+    kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
+    imprimir_kg: form.imprimir_kg,
+    mostrar_titulo: form.mostrar_titulo
+  })
+}
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
@@ -63,19 +67,38 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
           </div>
 
           <Row>
-            <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Kilos x PACK <span className="text-danger">*</span></Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    name="kilos_producidos"
-                    value={form.kilos_producidos}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
+             <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Kilos consumidos del rollo <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="kilos_producidos"
+                        value={form.kilos_producidos}
+                        onChange={handleChange}
+                        required
+                        max={detalle?.kg_rollo_original}
+                      />
+                      <Form.Text className="text-muted">
+                        Máx disponible: {detalle?.kg_rollo_original} kg originales
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Kilos a imprimir en etiqueta</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="kilos_imp"
+                        value={form.kilos_imp}
+                        onChange={handleChange}
+                        placeholder="opcional"
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
               <Col md={6} className="d-flex align-items-center pt-3">
               <Col md={6}>
                 <Form.Check

@@ -74,6 +74,7 @@ def actualizar_produccion(prod_id: int, body: dict, db: Session = Depends(get_db
     db.refresh(prod)
     return selladora_service._enrich_produccion(db, prod)        
 
+
 @router.get("/producciones/{prod_id}/detalles", response_model=List[ProduccionSelladoraDetalleOut])
 def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
     from app.models.produccion import OrdenProduccion
@@ -91,24 +92,24 @@ def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
             ).first()
             if op_ext:
                 densidad = op_ext.densidad
-            result.append(ProduccionSelladoraDetalleOut(
-                id=d.id,
-                detalle_extrusora_id=d.detalle_extrusora_id,
-                q_paquetes=d.q_paquetes,
-                q_unidades_por_paquete=d.q_unidades_por_paquete,
-                unidades=d.unidades,
-                kilos=d.kilos,
-                kilos_imp=d.kilos_imp,
-                kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else None,  # ← este
-                imprimir_kg=d.imprimir_kg,
-                mostrar_titulo=d.mostrar_titulo,
-                es_pack_parcial=d.es_pack_parcial,
-                numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
-                lote_extrusora=lote,
-                fecha_extrusora=fecha,
-                densidad_extrusora=densidad,
-                created_at=d.created_at
-            ))
+        result.append(ProduccionSelladoraDetalleOut(
+            id=d.id,
+            detalle_extrusora_id=d.detalle_extrusora_id,
+            q_paquetes=d.q_paquetes,
+            q_unidades_por_paquete=d.q_unidades_por_paquete,
+            unidades=d.unidades,
+            kilos=d.kilos,
+            kilos_imp=d.kilos_imp,
+            kg_rollo_original=d.detalle_extrusora.kg if d.detalle_extrusora else None,
+            imprimir_kg=d.imprimir_kg,
+            mostrar_titulo=d.mostrar_titulo,
+            es_pack_parcial=d.es_pack_parcial,
+            numero_rollo=d.detalle_extrusora.numero_rollo if d.detalle_extrusora else 0,
+            lote_extrusora=lote,
+            fecha_extrusora=fecha,
+            densidad_extrusora=densidad,
+            created_at=d.created_at
+        ))
     return result
 
 
@@ -211,6 +212,24 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
     ws = wb.active
     ws.title = str(op_id)
 
+
+
+
+# Logo
+    try:
+        from io import BytesIO as BytesIOLogo
+        from openpyxl.drawing.image import Image as XLImage
+        with open('/app/app/assets/logo_frys.png', 'rb') as f:
+            img_data = f.read()
+        img_stream = BytesIOLogo(img_data)
+        logo = XLImage(img_stream)
+        logo.width = 120
+        logo.height = 60
+        ws.add_image(logo, 'A1')
+    except Exception as e:
+        print(f"ERROR LOGO: {e}")
+
+
     # Anchos columnas A-K
     anchos = [8, 14, 36, 14, 14, 12, 14, 12, 10, 10, 12]
     for i, w in enumerate(anchos, 1):
@@ -284,15 +303,15 @@ def generar_trazabilidad(op_id: int, body: dict, db: Session = Depends(get_db)):
             if d.detalle_extrusora and d.detalle_extrusora.produccion:
                 lotes.add(str(d.detalle_extrusora.produccion.lote))
 
-    ws['A14'] = 'ORDEN PEDIDO MP :'
+    ws['A14'] = 'ORDEN DE COMPRA :'
     ws['A14'].font = Font(bold=True, size=10, color='1F3864')
-    ws['C14'] = ' '.join(sorted(lotes))
-    ws['C14'].font = Font(size=10)
+    ws['C14'] = oc_cliente if oc_cliente else ''
+    ws['C14'].font = Font(bold=True, size=10)
 
-    ws['A15'] = 'ORDEN DE COMPRA'
+    ws['A15'] = 'ORDEN PEDIDO MP'
     ws['A15'].font = Font(bold=True, size=10, color='1F3864')
-    ws['C15'] = oc_cliente if oc_cliente else ''
-    ws['C15'].font = Font(bold=True, size=10)
+    ws['C15'] = ' '.join(sorted(lotes))
+    ws['C15'].font = Font(size=10)
 
     # Encabezado tabla — sin COD ni PROVEEDOR
     HEADER_ROW = 16
