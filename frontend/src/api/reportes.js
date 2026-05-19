@@ -9,8 +9,11 @@ export const getExcelSemana = async (fecha) => {
   const url = `${API_URL}/reportes/semana/excel${fecha ? `?fecha=${fecha}` : ''}`
   const response = await fetch(url)
   const blob = await response.blob()
+  const xlsxBlob = new Blob([blob], { 
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+  })
   const link = document.createElement('a')
-  link.href = window.URL.createObjectURL(blob)
+  link.href = window.URL.createObjectURL(xlsxBlob)
   link.download = `Produccion-${fecha || 'semana'}.xlsx`
   link.click()
   window.URL.revokeObjectURL(link.href)

@@ -166,7 +166,7 @@ export default function ReporteSemanaPage() {
               {/* Sección Extrusora */}
               <tr>
                   <td colSpan={13} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
-                    <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
+                    <i className="fas fa-industry me-2"></i>EXTRUSORAS (KG)
                   </td>
                 </tr>
               {renderSeccion(reporte.extrusora, 'Extrusora', '#EBF3FB', 'kg')}
@@ -174,7 +174,7 @@ export default function ReporteSemanaPage() {
               {/* Sección Selladora */}
               <tr>
                   <td colSpan={13} style={{ background: '#1F3864', color: 'white', fontWeight: 'bold', fontSize: 11, padding: '4px 8px' }}>
-                    <i className="fas fa-industry me-2"></i>EXTRUSORA (KG)
+                    <i className="fas fa-cut me-2"></i>SELLADORAS 
                   </td>
                 </tr>
               {renderSeccion(reporte.selladora, 'Selladora', '#FFF8E1', 'unidades')}
