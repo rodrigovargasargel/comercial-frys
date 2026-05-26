@@ -170,7 +170,7 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
         key = f"SELL|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}x{r.largo}|{dens}"
         if key not in sell_data:
             sell_data[key] = {
-                'label': f"UNID {get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {int(r.ancho)}x{int(r.largo)}x{int(r.espesor)}",
+                'label': f"UN {get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {int(r.ancho)}x{int(r.largo)}x{int(r.espesor)}",
                 'dia': {}, 'noche': {}
             }
         fecha_str = r.fecha.isoformat()
@@ -219,7 +219,7 @@ def descargar_excel_semana(fecha: Optional[str] = None, db: Session = Depends(ge
         .distinct().all()
     op_sell_ids_list = [r.id for r in op_sell_ids_real]
     densidades_sell = get_densidades_selladora(db, op_sell_ids_list)
-    
+
 
     wb = Workbook()
     ws = wb.active

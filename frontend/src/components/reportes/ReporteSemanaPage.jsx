@@ -73,8 +73,8 @@ export default function ReporteSemanaPage() {
 
     return (
       <tr key={idx} style={{ background: idx % 2 === 0 ? colorFila : '#fafafa' }}>
-        <td style={{ ...tdBase, fontSize: 'clamp(9px,1vw,11px)', color: '#777' }}></td>
-        <td style={{ ...tdBase, textAlign: 'left' }}>{row.label}</td>
+        
+        <td colSpan={2} style={{ ...tdBase, textAlign: 'left' }}>{row.label}</td>
         {reporte.dias.map((dia, i) => (
           <td key={`d-${i}`} style={{ ...tdBase, color: row.dia[dia] ? '#1a6b3a' : '#ccc', fontWeight: row.dia[dia] ? 'bold' : 'normal' }}>
             {row.dia[dia] || '—'}
