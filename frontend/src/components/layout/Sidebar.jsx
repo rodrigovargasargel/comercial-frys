@@ -15,6 +15,7 @@ export default function Sidebar() {
     { path: '/empresas', icon: 'fa-building', label: 'Empresas' },    
     { path: '/colores', icon: 'fa-palette', label: 'Colores' },
     { path: '/informe-produccion', icon: 'fa-chart-bar', label: 'Informe Producción' },
+    { path: '/stock', icon: 'fa-warehouse', label: 'Stock' },
     
   ]
 
@@ -27,6 +28,7 @@ export default function Sidebar() {
     { path: '/empresas', icon: 'fa-building', label: 'Empresas' },
     { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
     { path: '/colores', icon: 'fa-palette', label: 'Colores' },
+   
   ]
 
   const menu = usuario?.perfil_id === 3 ? menuOperario : menuCompleto

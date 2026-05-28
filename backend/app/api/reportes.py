@@ -247,4 +247,288 @@ def get_densidad_op_selladora(db, op_selladora_id):
         ).first()
         if op_ext:
             return 'AD' if op_ext.densidad == 'alta' else 'BD'
-    return ''   
+    return ''  
+
+
+# ************ REPORTE STOCK **************     
+
+@router.get("/stock")
+def get_stock(db: Session = Depends(get_db)):
+    from app.models.producto import Producto
+    from app.models.produccion import Color, OrdenProduccion, ProduccionExtrusora, DetalleProduccionExtrusora
+    from app.models.selladora import OPSelladora, ProduccionSelladora, ProduccionSelladoraDetalle
+    from sqlalchemy import func
+
+    # --- EXTRUSORA: kg producidos por producto/color/ancho/espesor/densidad ---
+    # --- EXTRUSORA ---
+    ext_rows = db.query(
+        OrdenProduccion.producto_id,
+        OrdenProduccion.color_id,
+        OrdenProduccion.ancho,
+        OrdenProduccion.espesor,
+        OrdenProduccion.densidad,
+        func.sum(DetalleProduccionExtrusora.kg).label('kg_total'),
+        func.count(DetalleProduccionExtrusora.id).label('nro_rollos')
+    ).join(ProduccionExtrusora, ProduccionExtrusora.op_id == OrdenProduccion.id)\
+    .join(DetalleProduccionExtrusora, DetalleProduccionExtrusora.produccion_extrusora_id == ProduccionExtrusora.id)\
+    .group_by(
+        OrdenProduccion.producto_id, OrdenProduccion.color_id,
+        OrdenProduccion.ancho, OrdenProduccion.espesor, OrdenProduccion.densidad
+    ).all()
+
+    # --- SELLADORA: unidades producidas por producto/color/ancho/espesor/largo ---
+    sell_rows = db.query(
+        OPSelladora.id,
+        OPSelladora.producto_id,
+        OPSelladora.color_id,
+        OPSelladora.ancho,
+        OPSelladora.espesor,
+        OPSelladora.largo,
+        func.sum(ProduccionSelladoraDetalle.unidades).label('unidades_total')
+    ).join(ProduccionSelladora, ProduccionSelladora.op_id == OPSelladora.id)\
+     .join(ProduccionSelladoraDetalle, ProduccionSelladoraDetalle.produccion_selladora_id == ProduccionSelladora.id)\
+     .group_by(
+         OPSelladora.id, OPSelladora.producto_id, OPSelladora.color_id,
+         OPSelladora.ancho, OPSelladora.espesor, OPSelladora.largo
+     ).all()
+
+     #************* contador saldo y rollos disponibles en stock
+
+    from app.models.selladora import ProduccionSelladoraDetalle as PSD
+
+        # kg usados en selladora por rollo de extrusora
+    kg_usados_subq = db.query(
+            DetalleProduccionExtrusora.id.label('det_id'),
+            func.coalesce(func.sum(PSD.kilos), 0).label('kg_usado')
+        ).outerjoin(PSD, PSD.detalle_extrusora_id == DetalleProduccionExtrusora.id)\
+        .filter(PSD.es_pack_parcial == False)\
+        .group_by(DetalleProduccionExtrusora.id).subquery()
+
+        # rollos con saldo > 0 por grupo
+    rollos_disponibles = db.query(
+            OrdenProduccion.producto_id,
+            OrdenProduccion.color_id,
+            OrdenProduccion.ancho,
+            OrdenProduccion.espesor,
+            OrdenProduccion.densidad,
+            func.count(DetalleProduccionExtrusora.id).label('rollos_disp'),
+            func.sum(DetalleProduccionExtrusora.kg - func.coalesce(kg_usados_subq.c.kg_usado, 0)).label('kg_saldo')
+        ).join(ProduccionExtrusora, ProduccionExtrusora.op_id == OrdenProduccion.id)\
+        .join(DetalleProduccionExtrusora, DetalleProduccionExtrusora.produccion_extrusora_id == ProduccionExtrusora.id)\
+        .outerjoin(kg_usados_subq, kg_usados_subq.c.det_id == DetalleProduccionExtrusora.id)\
+        .filter((DetalleProduccionExtrusora.kg - func.coalesce(kg_usados_subq.c.kg_usado, 0)) > 0)\
+        .group_by(
+            OrdenProduccion.producto_id, OrdenProduccion.color_id,
+            OrdenProduccion.ancho, OrdenProduccion.espesor, OrdenProduccion.densidad
+        ).all()
+
+        # Indexar por clave
+    saldo_map = {
+            (r.producto_id, r.color_id, r.ancho, r.espesor, r.densidad): {
+                'rollos_disp': r.rollos_disp,
+                'kg_saldo': round(float(r.kg_saldo), 2)
+            } for r in rollos_disponibles
+        }
+
+     #************* hasta aca contador
+
+    productos_cache = {}
+    colores_cache = {}
+
+    def get_producto(pid):
+        if pid not in productos_cache:
+            p = db.query(Producto).filter(Producto.id == pid).first()
+            productos_cache[pid] = p.nombre if p else str(pid)
+        return productos_cache[pid]
+
+    def get_color(cid):
+        if cid not in colores_cache:
+            c = db.query(Color).filter(Color.id == cid).first()
+            colores_cache[cid] = c.nombre if c else str(cid)
+        return colores_cache[cid]
+
+    # Densidades selladora
+    op_sell_ids = [r.id for r in sell_rows]
+    densidades_sell = get_densidades_selladora(db, op_sell_ids)
+
+    extrusora = []
+    for r in ext_rows:  
+        dens = 'AD' if r.densidad == 'alta' else 'BD'
+        key = (r.producto_id, r.color_id, r.ancho, r.espesor, r.densidad)
+        saldo_info = saldo_map.get(key, {'rollos_disp': 0, 'kg_saldo': 0})
+        extrusora.append({
+            'producto_id': r.producto_id,
+            'color_id': r.color_id,
+            'label': f"{get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {r.ancho}x{r.espesor}",
+            'kg_total': round(float(r.kg_total), 2),
+            'nro_rollos': r.nro_rollos,
+            'rollos_disponibles': saldo_info['rollos_disp'],
+            'kg_saldo': saldo_info['kg_saldo'],
+            'densidad': r.densidad,
+            'ancho': r.ancho,
+            'espesor': r.espesor
+        })
+
+    selladora = []
+    for r in sell_rows:
+        dens = densidades_sell.get(r.id, '')
+        selladora.append({
+            'op_id': r.id,
+            'producto_id': r.producto_id,
+            'color_id': r.color_id,
+            'label': f"{get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {int(r.ancho)}x{int(r.espesor)}x{int(r.largo)}",
+            'unidades_total': int(r.unidades_total),
+            'ancho': r.ancho,
+            'espesor': r.espesor,
+            'largo': r.largo
+        })
+
+    return {
+        'extrusora': extrusora,
+        'selladora': selladora
+    }
+
+@router.get("/stock/trazabilidad-extrusora")
+def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espesor: float, densidad: str, db: Session = Depends(get_db)):
+    from app.models.produccion import OrdenProduccion, ProduccionExtrusora, DetalleProduccionExtrusora
+    from app.models.selladora import ProduccionSelladora, ProduccionSelladoraDetalle, OPSelladora
+    from app.models.producto import Producto
+
+    ops = db.query(OrdenProduccion).filter(
+        OrdenProduccion.producto_id == producto_id,
+        OrdenProduccion.color_id == color_id,
+        OrdenProduccion.ancho == ancho,
+        OrdenProduccion.espesor == espesor,
+        OrdenProduccion.densidad == densidad
+    ).all()
+
+    # Construir lista de movimientos con fecha para ordenar cronológicamente
+    movimientos = []
+
+    for op in ops:
+        prods = db.query(ProduccionExtrusora).filter(ProduccionExtrusora.op_id == op.id).all()
+        for prod in prods:
+            dets = db.query(DetalleProduccionExtrusora)\
+                .filter(DetalleProduccionExtrusora.produccion_extrusora_id == prod.id)\
+                .order_by(DetalleProduccionExtrusora.numero_rollo).all()
+            for det in dets:
+                # ENTRADA: el rollo entra al stock
+                movimientos.append({
+                    'fecha': prod.fecha,
+                    'es': 'E',
+                    'lote': prod.lote,
+                    'op_id': op.id,
+                    'numero_rollo': det.numero_rollo,
+                    'kg': det.kg,
+                    'kg_mov': det.kg,  # positivo
+                    'producto_sellado': '',
+                    'unidades_producidas': None,
+                    'kg_ocupados': None,
+                })
+
+                # SALIDAS: cada vez que el rollo se usa en selladora
+                usos = db.query(ProduccionSelladoraDetalle)\
+                    .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
+                    .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).all()
+
+                for uso in usos:
+                    prod_sell = db.query(ProduccionSelladora).filter(
+                        ProduccionSelladora.id == uso.produccion_selladora_id
+                    ).first()
+                    op_sell = db.query(OPSelladora).filter(
+                        OPSelladora.id == prod_sell.op_id
+                    ).first() if prod_sell else None
+                    prod_nombre = ''
+                    cliente_nombre = ''
+                    op_sell_id = None
+                    if op_sell:
+                        op_sell_id = op_sell.id
+                        if op_sell.producto_id:
+                            p = db.query(Producto).filter(Producto.id == op_sell.producto_id).first()
+                            prod_nombre = p.nombre if p else ''
+                        if op_sell.empresa_id:
+                            from app.models.empresa import Empresa
+                            emp = db.query(Empresa).filter(Empresa.id == op_sell.empresa_id).first()
+                            cliente_nombre = emp.nombre if emp else ''
+
+                    movimientos.append({
+                        'fecha': prod_sell.fecha if prod_sell else prod.fecha,
+                        'es': 'S',
+                        'lote': prod.lote,
+                        'op_id': op.id,
+                        'op_sell_id': op_sell_id,
+                        'cliente': '',
+                        'numero_rollo': det.numero_rollo,
+                        'kg': det.kg,
+                        'kg_mov': -uso.kilos,
+                        'producto_sellado': prod_nombre,
+                        'cliente': cliente_nombre,
+                        'unidades_producidas': uso.unidades,
+                        'kg_ocupados': uso.kilos,
+                    })
+
+    # Ordenar por fecha
+    movimientos.sort(key=lambda x: x['fecha'] if x['fecha'] else date.min)
+
+    # Calcular saldo acumulativo
+    saldo = 0
+    result = []
+    for m in movimientos:
+        saldo = round(saldo + m['kg_mov'], 2)
+        result.append({
+            'fecha': m['fecha'].isoformat() if m['fecha'] else '',
+            'es': m['es'],
+            'lote': m['lote'],
+            'op_id': m['op_id'],
+            'numero_rollo': m['numero_rollo'],
+            'kg': m['kg'],
+            'producto_sellado': m['producto_sellado'],
+            'unidades_producidas': m['unidades_producidas'],
+            'kg_ocupados': m['kg_ocupados'],
+            'op_sell_id': m.get('op_sell_id'),
+            'cliente': m.get('cliente', ''),
+            'saldo_kg': saldo
+        })
+
+    return result
+
+@router.get("/stock/trazabilidad-selladora")
+def trazabilidad_selladora(op_id: int, db: Session = Depends(get_db)):
+    from app.models.selladora import OPSelladora, ProduccionSelladora, ProduccionSelladoraDetalle
+    from app.models.empresa import Empresa
+
+    op = db.query(OPSelladora).filter(OPSelladora.id == op_id).first()
+    if not op:
+        return []
+
+    prods = db.query(ProduccionSelladora).filter(ProduccionSelladora.op_id == op_id).all()
+
+    result = []
+    saldo_acumulado = 0
+
+    for prod in prods:
+        dets = db.query(ProduccionSelladoraDetalle)\
+            .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id).all()
+        for det in dets:
+            saldo_acumulado += det.unidades
+            cliente = ''
+            if op.empresa_id:
+                emp = db.query(Empresa).filter(Empresa.id == op.empresa_id).first()
+                cliente = emp.nombre if emp else ''
+
+            lote = ''
+            if det.detalle_extrusora and det.detalle_extrusora.produccion:
+                lote = det.detalle_extrusora.produccion.lote
+
+            result.append({
+                'fecha': prod.fecha.isoformat() if prod.fecha else '',
+                'lote': lote,
+                'es': 'E',
+                'cantidad': det.unidades,
+                'cliente': cliente,
+                'saldo': saldo_acumulado
+            })
+
+    return result
+
+    

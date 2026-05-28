@@ -11,6 +11,7 @@ import MateriaPrimaPage from './components/materia_prima/MateriaPrimaPage'
 import SelladoraPage from './components/selladora/SelladoraPage'
 import ColoresPage from './components/colores/ColoresPage'
 import ReporteSemanaPage from './components/reportes/ReporteSemanaPage'
+import StockPage from './components/reportes/StockPage'
 
 function RutaProtegida({ children, perfilesPermitidos }) {
   const { usuario } = useAuth()
@@ -89,6 +90,12 @@ function AppRoutes() {
         } />
 
       </Route>
+
+      <Route path="stock" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <StockPage />
+          </RutaProtegida>
+        } />
 
       
     </Routes>

@@ -4,6 +4,11 @@ const API = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 export const getReporteSemana = (fecha) =>
   API.get('/reportes/semana', { params: fecha ? { fecha } : {} })
 
+
+export const getStock = () => API.get('/reportes/stock')
+export const getTrazabilidadExtrusora = (params) => API.get('/reportes/stock/trazabilidad-extrusora', { params })
+export const getTrazabilidadSelladora = (op_id) => API.get('/reportes/stock/trazabilidad-selladora', { params: { op_id } })
+
 export const getExcelSemana = async (fecha) => {
   const API_URL = import.meta.env.VITE_API_URL
   const url = `${API_URL}/reportes/semana/excel${fecha ? `?fecha=${fecha}` : ''}`

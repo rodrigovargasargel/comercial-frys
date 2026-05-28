@@ -1,0 +1,313 @@
+import React, { useState, useEffect } from 'react'
+import { Container, Button, Spinner, Alert, Badge, Table, Collapse } from 'react-bootstrap'
+import { getStock, getTrazabilidadExtrusora, getTrazabilidadSelladora } from '../../api/reportes'
+
+const formatFecha = (fecha) => {
+  if (!fecha) return ''
+  const [y, m, d] = fecha.split('-')
+  return `${d}-${m}-${y}`
+}
+
+export default function StockPage() {
+  const [stock, setStock] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [trazExt, setTrazExt] = useState({})
+  const [trazSell, setTrazSell] = useState({})
+  const [expandedExt, setExpandedExt] = useState(null)
+  const [expandedSell, setExpandedSell] = useState(null)
+  const [loadingTraz, setLoadingTraz] = useState(null)
+
+  const thStyle = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '5px 8px', whiteSpace: 'nowrap' }
+  const tdStyle = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '4px 8px', whiteSpace: 'nowrap' }
+ 
+  const [sortExt, setSortExt] = useState({ col: 'label', dir: 'asc' })
+  const [sortSell, setSortSell] = useState({ col: 'label', dir: 'asc' }) 
+
+  useEffect(() => {
+    cargar()
+  }, [])
+
+  const cargar = async () => {
+    try {
+      setLoading(true)
+      const { data } = await getStock()
+      setStock(data)
+    } catch {
+      setError('Error al cargar stock')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleTrazExt = async (item, idx) => {
+    if (expandedExt === idx) { setExpandedExt(null); return }
+    setExpandedExt(idx)
+    if (!trazExt[idx]) {
+      setLoadingTraz(`ext-${idx}`)
+      try {
+        const { data } = await getTrazabilidadExtrusora({
+          producto_id: item.producto_id,
+          color_id: item.color_id,
+          ancho: item.ancho,
+          espesor: item.espesor,
+          densidad: item.densidad
+        })
+        setTrazExt(prev => ({ ...prev, [idx]: data }))
+      } catch {
+        setError('Error al cargar trazabilidad')
+      } finally {
+        setLoadingTraz(null)
+      }
+    }
+  }
+
+  const toggleTrazSell = async (item, idx) => {
+    if (expandedSell === idx) { setExpandedSell(null); return }
+    setExpandedSell(idx)
+    if (!trazSell[idx]) {
+      setLoadingTraz(`sell-${idx}`)
+      try {
+        const { data } = await getTrazabilidadSelladora(item.op_id)
+        setTrazSell(prev => ({ ...prev, [idx]: data }))
+      } catch {
+        setError('Error al cargar trazabilidad')
+      } finally {
+        setLoadingTraz(null)
+      }
+    }
+  }
+
+
+  const sortData = (data, sort) => {
+  return [...data].sort((a, b) => {
+    const va = a[sort.col]
+    const vb = b[sort.col]
+    if (va < vb) return sort.dir === 'asc' ? -1 : 1
+    if (va > vb) return sort.dir === 'asc' ? 1 : -1
+    return 0
+  })
+}
+
+const SortTh = ({ label, col, sort, setSort }) => {
+  const active = sort.col === col
+  return (
+    <th style={{ ...thStyle, cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => setSort({ col, dir: active && sort.dir === 'asc' ? 'desc' : 'asc' })}>
+      {label} {active ? (sort.dir === 'asc' ? '↑' : '↓') : <span style={{ opacity: 0.3 }}>↕</span>}
+    </th>
+  )
+}
+
+  return (
+    <Container fluid className="py-3 px-2 px-md-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0 fw-bold">
+          <i className="fas fa-warehouse me-2"></i>
+          Stock Actual
+        </h5>
+        <Button variant="outline-dark" size="sm" onClick={cargar}>
+          <i className="fas fa-sync me-1"></i>Actualizar
+        </Button>
+      </div>
+
+      {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+
+      {loading ? (
+        <div className="text-center py-5"><Spinner animation="border" variant="dark" /></div>
+      ) : stock && (
+        <div className="row g-3">
+
+          {/* EXTRUSORA */}
+          <div className="col-12">
+            <div className="card shadow-sm">
+              <div className="card-header bg-dark text-white py-2">
+                <i className="fas fa-industry me-2"></i>
+                <strong>EXTRUSORA (KG)</strong>
+              </div>
+              <div className="card-body p-0">
+                <Table hover className="mb-0">
+                  {/* Extrusora */}
+                    <thead style={{ background: '#2E75B6', color: 'white' }}>
+                    <tr>
+                        
+                        <SortTh label="Producto" col="label" sort={sortExt} setSort={setSortExt} />
+                        <SortTh label="KG Total" col="kg_total" sort={sortExt} setSort={setSortExt} />
+                        <SortTh label="Rollos Disp." col="rollos_disponibles" sort={sortExt} setSort={setSortExt} />
+                        <SortTh label="Saldo KG" col="kg_saldo" sort={sortExt} setSort={setSortExt} />
+                    </tr>
+                    </thead>
+                    <tbody>
+  
+                    {stock.extrusora.length === 0 ? (
+                      <tr><td colSpan={3} className="text-center text-muted py-3">Sin registros</td></tr>
+                    ) : sortData(stock.extrusora, sortExt).map((item, idx) => (
+                      <React.Fragment key={idx}>
+                        <tr style={{ cursor: 'pointer' }} onClick={() => toggleTrazExt(item, idx)}>
+                          <td style={tdStyle}>
+                            <span className="text-primary fw-bold">{item.label}</span>
+                            </td>
+                            <td style={tdStyle}>
+                            <Badge bg="info" text="dark">{item.kg_total} kg</Badge>
+                            </td>
+                            <td style={tdStyle}>
+                            <Badge bg={item.rollos_disponibles > 0 ? 'success' : 'secondary'}>
+                                {item.rollos_disponibles} rollos
+                            </Badge>
+                            </td>
+                            <td style={tdStyle}>
+                            <span className={item.kg_saldo > 0 ? 'text-success fw-bold' : 'text-muted'}>
+                                {item.kg_saldo} kg
+                            </span>
+                            </td>
+                        </tr>
+                        {expandedExt === idx && (
+                          <tr>
+                            <td colSpan={3} className="p-0">
+                              <div style={{ margin: '4px 16px', border: '1px solid #0dcaf0', borderRadius: 6 }}>
+                                {loadingTraz === `ext-${idx}` ? (
+                                  <div className="text-center py-2"><Spinner size="sm" /></div>
+                                ) : (
+                                  <Table size="sm" className="mb-0">
+                                    <thead style={{ background: '#EBF3FB' }}>
+                                      <tr>
+                                      <th style={thStyle}>Fecha</th>
+                                        <th style={thStyle}>E/S</th>
+                                        <th style={thStyle}>Lote</th>
+                                        <th style={thStyle}>OP</th>
+                                        <th style={thStyle}>Cliente</th>
+                                        <th style={thStyle}>#Rollo</th>
+                                        <th style={thStyle}>KG</th>
+                                        <th style={thStyle}>Prod. Sellado</th>
+                                        <th style={thStyle}>OP Sellado</th>
+                                        <th style={thStyle}>Unidades</th>
+                                        <th style={thStyle}>KG Usados</th>
+                                        <th style={thStyle}>Saldo KG</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(trazExt[idx] || []).length === 0 ? (
+                                        <tr><td colSpan={10} className="text-center text-muted py-2 small">Sin movimientos</td></tr>
+                                      ) : (trazExt[idx] || []).map((t, i) => (
+                                        
+                                        <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8f9fa' }}>
+                                        <td style={tdStyle}>{formatFecha(t.fecha)}</td>
+                                        <td style={tdStyle}><Badge bg={t.es === 'E' ? 'success' : 'danger'}>{t.es}</Badge></td>
+                                        <td style={tdStyle}>{t.lote}</td>
+                                        <td style={tdStyle}>{t.op_id}</td>
+                                        <td style={tdStyle}>{t.cliente || '—'}</td>
+                                        <td style={tdStyle}>#{String(t.numero_rollo).padStart(3,'0')}</td>
+                                        <td style={tdStyle}><strong>{t.kg} kg</strong></td>
+                                        <td style={tdStyle}>{t.producto_sellado || '—'}</td>
+                                        <td style={tdStyle}>{t.op_sell_id || '—'}</td>
+                                        <td style={tdStyle}>{t.unidades_producidas !== null ? t.unidades_producidas.toLocaleString() : '—'}</td>
+                                        <td style={tdStyle}>{t.kg_ocupados !== null ? `${t.kg_ocupados} kg` : '—'}</td>
+                                        <td style={tdStyle}>
+                                            <span className={t.saldo_kg > 0 ? 'text-success fw-bold' : t.saldo_kg === 0 ? 'text-muted' : 'text-danger fw-bold'}>
+                                            {t.saldo_kg} kg
+                                            </span>
+                                        </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </div>
+          </div>
+
+          {/* SELLADORA */}
+          <div className="col-12">
+            <div className="card shadow-sm">
+              <div className="card-header bg-dark text-white py-2">
+                <i className="fas fa-cut me-2"></i>
+                <strong>SELLADORA (UNIDADES)</strong>
+              </div>
+              <div className="card-body p-0">
+                <Table hover className="mb-0">
+                  {/* Selladora */}
+                    <thead style={{ background: '#2E75B6', color: 'white' }}>
+                    <tr>
+                        <th style={{ ...thStyle, width: 32 }}></th>
+                        <SortTh label="Producto" col="label" sort={sortSell} setSort={setSortSell} />
+                        <SortTh label="Unidades" col="unidades_total" sort={sortSell} setSort={setSortSell} />
+                    </tr>
+                    </thead>
+                    <tbody>
+  
+                    {stock.selladora.length === 0 ? (
+                      <tr><td colSpan={3} className="text-center text-muted py-3">Sin registros</td></tr>
+                    ) : sortData(stock.selladora, sortSell).map((item, idx) => (
+                      <React.Fragment key={idx}>
+                        <tr style={{ cursor: 'pointer' }} onClick={() => toggleTrazSell(item, idx)}>
+                          <td style={tdStyle}>
+                            <i className={`fas fa-chevron-${expandedSell === idx ? 'down' : 'right'} text-muted`}></i>
+                          </td>
+                          <td style={tdStyle}>
+                            <span className="text-primary fw-bold">{item.label}</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <Badge bg="warning" text="dark">{item.unidades_total.toLocaleString()} unid</Badge>
+                          </td>
+                        </tr>
+                        {expandedSell === idx && (
+                          <tr>
+                            <td colSpan={3} className="p-0">
+                              <div style={{ margin: '4px 16px', border: '1px solid #ffc107', borderRadius: 6 }}>
+                                {loadingTraz === `sell-${idx}` ? (
+                                  <div className="text-center py-2"><Spinner size="sm" /></div>
+                                ) : (
+                                  <Table size="sm" className="mb-0">
+                                    <thead style={{ background: '#fff8e1' }}>
+                                      <tr>
+                                        <th style={thStyle}>Fecha</th>
+                                        <th style={thStyle}>Lote</th>
+                                        <th style={thStyle}>E/S</th>
+                                        <th style={thStyle}>Cantidad</th>
+                                        <th style={thStyle}>Cliente</th>
+                                        <th style={thStyle}>Saldo</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(trazSell[idx] || []).length === 0 ? (
+                                        <tr><td colSpan={6} className="text-center text-muted py-2 small">Sin movimientos</td></tr>
+                                      ) : (trazSell[idx] || []).map((t, i) => (
+                                        <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#fffdf0' }}>
+                                          <td style={tdStyle}>{formatFecha(t.fecha)}</td>
+                                          <td style={tdStyle}>{t.lote}</td>
+                                          <td style={tdStyle}><Badge bg="success">{t.es}</Badge></td>
+                                          <td style={tdStyle}><strong>{t.cantidad.toLocaleString()}</strong></td>
+                                          <td style={tdStyle}>{t.cliente || '—'}</td>
+                                          <td style={tdStyle}>
+                                            <span className="text-success fw-bold">{t.saldo.toLocaleString()}</span>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </Container>
+  )
+}
