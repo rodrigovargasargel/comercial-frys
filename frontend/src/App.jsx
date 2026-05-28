@@ -89,13 +89,16 @@ function AppRoutes() {
           </RutaProtegida>
         } />
 
-      </Route>
 
-      <Route path="stock" element={
+        <Route path="stock" element={
           <RutaProtegida perfilesPermitidos={[1, 2]}>
             <StockPage />
           </RutaProtegida>
         } />
+
+      </Route>
+
+      
 
       
     </Routes>

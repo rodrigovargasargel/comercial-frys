@@ -412,15 +412,25 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                 .filter(DetalleProduccionExtrusora.produccion_extrusora_id == prod.id)\
                 .order_by(DetalleProduccionExtrusora.numero_rollo).all()
             for det in dets:
+                # ENTRADA: calcular kg disponibles de este rollo específico
+                kg_usado_rollo = db.query(func.coalesce(func.sum(ProduccionSelladoraDetalle.kilos), 0))\
+                    .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
+                    .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).scalar() or 0
+
+                kg_disponible_rollo = round(det.kg - float(kg_usado_rollo), 2)
+
                 # ENTRADA: el rollo entra al stock
                 movimientos.append({
                     'fecha': prod.fecha,
                     'es': 'E',
                     'lote': prod.lote,
                     'op_id': op.id,
+                    'op_sell_id': None,
+                    'cliente': '',
                     'numero_rollo': det.numero_rollo,
                     'kg': det.kg,
-                    'kg_mov': det.kg,  # positivo
+                    'kg_mov': det.kg,
+                    'kg_disponible_rollo': kg_disponible_rollo,  # ← nuevo
                     'producto_sellado': '',
                     'unidades_producidas': None,
                     'kg_ocupados': None,
@@ -465,6 +475,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                         'cliente': cliente_nombre,
                         'unidades_producidas': uso.unidades,
                         'kg_ocupados': uso.kilos,
+                        'kg_disponible_rollo': None,  # las salidas no tienen disponible
                     })
 
     # Ordenar por fecha
@@ -485,6 +496,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
             'producto_sellado': m['producto_sellado'],
             'unidades_producidas': m['unidades_producidas'],
             'kg_ocupados': m['kg_ocupados'],
+            'kg_disponible_rollo': m.get('kg_disponible_rollo'),
             'op_sell_id': m.get('op_sell_id'),
             'cliente': m.get('cliente', ''),
             'saldo_kg': saldo
