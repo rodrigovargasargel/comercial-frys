@@ -153,7 +153,7 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         if kg_disponibles <= 0:
             raise ValueError("Este rollo no tiene kg disponibles")
 
-        if data.kilos_producidos and data.kilos_producidos > kg_disponibles:
+        if data.kilos_producidos and data.kilos_producidos > round(kg_disponibles, 2):
             raise ValueError(f"Los kg ingresados ({data.kilos_producidos}) superan los disponibles ({round(kg_disponibles, 2)} kg)")
     else:
         pack_parcial_existente = db.query(ProduccionSelladoraDetalle)\
