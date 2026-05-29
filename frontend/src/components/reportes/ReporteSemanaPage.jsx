@@ -139,7 +139,7 @@ export default function ReporteSemanaPage() {
                 <th style={{ ...thBase, width: 60, background: '#f0f3f8', color: 'white' }}></th>
                 <th style={{ ...thBase, width: 220, background: '#eff1f5', color: 'white', textAlign: 'left' }}></th>
                 <th colSpan={5} style={{ ...thBase, background: '#2E75B6', color: 'white' }}>
-                   <i className="fas fa-sun me-1"></i>TURNO DIA
+                   <i className="fas fa-sun me-1"></i>TURNO DIA (*)
                 </th>
                 <th colSpan={5} style={{ ...thBase, background: '#1F3864', color: 'white' }}>
                   <i className="fas fa-moon me-1"></i>TURNO NOCHE
