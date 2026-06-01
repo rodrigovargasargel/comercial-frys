@@ -437,6 +437,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                 })
 
                 # SALIDAS inmediatamente después de la entrada
+                # SALIDAS inmediatamente después de la entrada
                 usos = db.query(ProduccionSelladoraDetalle)\
                     .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
                     .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).all()
@@ -458,23 +459,17 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                         if op_sell.producto_id:
                             p = db.query(Producto).filter(Producto.id == op_sell.producto_id).first()
                             prod_nombre_base = p.nombre if p else ''
-                        
-                        # Color de la OP selladora
                         from app.models.produccion import Color
                         color_sell = db.query(Color).filter(Color.id == op_sell.color_id).first() if op_sell.color_id else None
                         color_nombre = color_sell.nombre if color_sell else ''
-                        
-                        # Densidad desde la OP extrusora actual
                         dens_str = 'AD' if op.densidad == 'alta' else 'BD'
-                        
                         prod_nombre = f"{prod_nombre_base} {dens_str} {color_nombre} {int(op_sell.ancho)}x{int(op_sell.largo)}x{int(op_sell.espesor)}"
-    
                         if op_sell.empresa_id:
                             emp = db.query(Empresa).filter(Empresa.id == op_sell.empresa_id).first()
                             cliente_nombre = emp.nombre if emp else ''
 
-                saldo = round(saldo - uso.kilos, 2)
-                result.append({
+                    saldo = round(saldo - uso.kilos, 2)  # ← dentro del for
+                    result.append({                       # ← dentro del for
                         'fecha': prod_sell.fecha.isoformat() if prod_sell and prod_sell.fecha else '',
                         'es': 'S',
                         'lote': prod.lote,
@@ -489,7 +484,6 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                         'kg_ocupados': uso.kilos,
                         'saldo_kg': saldo
                     })
-
     return result
 
 @router.get("/stock/trazabilidad-selladora")
