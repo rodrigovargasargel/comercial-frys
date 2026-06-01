@@ -24,6 +24,7 @@ export default function StockPage() {
   const tdStyle = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '4px 8px', whiteSpace: 'nowrap' }
 
   const [busquedaExt, setBusquedaExt] = useState('') //buscador extrusion
+  const [extColapsada, setExtColapsada] = useState(false) //pestaña retractil en extrusion
 
   useEffect(() => { cargar() }, [])
 
@@ -125,19 +126,25 @@ export default function StockPage() {
           <div className="col-12">
             <div className="card shadow-sm">
               <div className="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
-                  <span>
+                  <span style={{ cursor: 'pointer' }} onClick={() => setExtColapsada(!extColapsada)}>
+                    <i className={`fas fa-chevron-${extColapsada ? 'right' : 'down'} me-2`}></i>
                     <i className="fas fa-industry me-2"></i>
                     <strong>EXTRUSORA (KG)</strong>
+                  
                   </span>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm w-auto"
-                      placeholder="Buscar producto..."
-                      value={busquedaExt}
-                      onChange={e => setBusquedaExt(e.target.value)}
-                      style={{ minWidth: 200, background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
-                    />
+                  <input
+                    type="text"
+                    className="form-control form-control-sm w-auto"
+                    placeholder="Buscar producto..."
+                    value={busquedaExt}
+                    onChange={e => setBusquedaExt(e.target.value)}
+                    style={{ minWidth: 200, background: 'rgba(222, 144, 144, 0.7)', color: 'rgba(240, 233, 233, 0.86)', border: '1px solid rgba(255,255,255,0.3)' }}
+                  />
+                  <span style={{ cursor: 'pointer' }} onClick={() => setExtColapsada(!extColapsada)}>
+                  <i className={`fas fa-chevron-${extColapsada ? 'right' : 'down'} me-2`}></i>
+                  </span>
                 </div>
+              {!extColapsada && (  
               <div className="card-body p-0">
                 <Table hover className="mb-0">
                   <thead style={{ background: '#2E75B6', color: 'white' }}>
@@ -209,11 +216,7 @@ export default function StockPage() {
                                         {(trazExt[key] || []).length === 0 ? (
                                           <tr><td colSpan={12} className="text-center text-muted py-2 small">Sin movimientos</td></tr>
                                         ) : (trazExt[key] || []).map((t, i) => (
-                                          <tr key={i} style={{ 
-                                                background: t.es === 'S' 
-                                                  ? 'rgba(220, 53, 69, 0.08)' 
-                                                  : i % 2 === 0 ? 'white' : '#f8f9fa' 
-                                              }}>
+                                          <tr key={i} className={t.es === 'S' ? 'traz-row-salida' : 'traz-row-entrada'}>
                                             <td style={tdStyle}>{formatFecha(t.fecha)}</td>
                                             <td style={tdStyle}>
                                               <Badge bg={t.es === 'E' ? 'success' : 'danger'}>{t.es}</Badge>
@@ -258,6 +261,7 @@ export default function StockPage() {
                   </tbody>
                 </Table>
               </div>
+              )}
             </div>
           </div>
 

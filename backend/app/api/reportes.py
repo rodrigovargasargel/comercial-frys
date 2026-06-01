@@ -417,7 +417,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                     .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
                     .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).scalar() or 0
                 kg_disponible_rollo = round(det.kg - float(kg_usado_rollo), 2)
-
+                print(f"Rollo {det.numero_rollo}: kg={det.kg}, kg_usado={kg_usado_rollo}, disponible={kg_disponible_rollo}")    
                 # ENTRADA
                 saldo = round(saldo + det.kg, 2)
                 result.append({
@@ -442,6 +442,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                     .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).all()
 
                 for uso in usos:
+                    print(f"  USO: det.id={det.id}, uso.detalle_extrusora_id={uso.detalle_extrusora_id}, kilos={uso.kilos}")
                     prod_sell = db.query(ProduccionSelladora).filter(
                         ProduccionSelladora.id == uso.produccion_selladora_id
                     ).first()
@@ -453,15 +454,27 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                     op_sell_id = None
                     if op_sell:
                         op_sell_id = op_sell.id
+                        prod_nombre_base = ''
                         if op_sell.producto_id:
                             p = db.query(Producto).filter(Producto.id == op_sell.producto_id).first()
-                            prod_nombre = p.nombre if p else ''
+                            prod_nombre_base = p.nombre if p else ''
+                        
+                        # Color de la OP selladora
+                        from app.models.produccion import Color
+                        color_sell = db.query(Color).filter(Color.id == op_sell.color_id).first() if op_sell.color_id else None
+                        color_nombre = color_sell.nombre if color_sell else ''
+                        
+                        # Densidad desde la OP extrusora actual
+                        dens_str = 'AD' if op.densidad == 'alta' else 'BD'
+                        
+                        prod_nombre = f"{prod_nombre_base} {dens_str} {color_nombre} {int(op_sell.ancho)}x{int(op_sell.largo)}x{int(op_sell.espesor)}"
+    
                         if op_sell.empresa_id:
                             emp = db.query(Empresa).filter(Empresa.id == op_sell.empresa_id).first()
                             cliente_nombre = emp.nombre if emp else ''
 
-                    saldo = round(saldo - uso.kilos, 2)
-                    result.append({
+                saldo = round(saldo - uso.kilos, 2)
+                result.append({
                         'fecha': prod_sell.fecha.isoformat() if prod_sell and prod_sell.fecha else '',
                         'es': 'S',
                         'lote': prod.lote,
