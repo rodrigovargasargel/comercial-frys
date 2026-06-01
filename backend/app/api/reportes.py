@@ -393,6 +393,7 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
     from app.models.produccion import OrdenProduccion, ProduccionExtrusora, DetalleProduccionExtrusora
     from app.models.selladora import ProduccionSelladora, ProduccionSelladoraDetalle, OPSelladora
     from app.models.producto import Producto
+    from app.models.empresa import Empresa
 
     ops = db.query(OrdenProduccion).filter(
         OrdenProduccion.producto_id == producto_id,
@@ -402,8 +403,8 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
         OrdenProduccion.densidad == densidad
     ).all()
 
-    # Construir lista de movimientos con fecha para ordenar cronológicamente
-    movimientos = []
+    result = []
+    saldo = 0
 
     for op in ops:
         prods = db.query(ProduccionExtrusora).filter(ProduccionExtrusora.op_id == op.id).all()
@@ -412,16 +413,15 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                 .filter(DetalleProduccionExtrusora.produccion_extrusora_id == prod.id)\
                 .order_by(DetalleProduccionExtrusora.numero_rollo).all()
             for det in dets:
-                # ENTRADA: calcular kg disponibles de este rollo específico
                 kg_usado_rollo = db.query(func.coalesce(func.sum(ProduccionSelladoraDetalle.kilos), 0))\
                     .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
                     .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).scalar() or 0
-
                 kg_disponible_rollo = round(det.kg - float(kg_usado_rollo), 2)
 
-                # ENTRADA: el rollo entra al stock
-                movimientos.append({
-                    'fecha': prod.fecha,
+                # ENTRADA
+                saldo = round(saldo + det.kg, 2)
+                result.append({
+                    'fecha': prod.fecha.isoformat() if prod.fecha else '',
                     'es': 'E',
                     'lote': prod.lote,
                     'op_id': op.id,
@@ -429,14 +429,14 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                     'cliente': '',
                     'numero_rollo': det.numero_rollo,
                     'kg': det.kg,
-                    'kg_mov': det.kg,
-                    'kg_disponible_rollo': kg_disponible_rollo,  # ← nuevo
+                    'kg_disponible_rollo': kg_disponible_rollo,
                     'producto_sellado': '',
                     'unidades_producidas': None,
                     'kg_ocupados': None,
+                    'saldo_kg': saldo
                 })
 
-                # SALIDAS: cada vez que el rollo se usa en selladora
+                # SALIDAS inmediatamente después de la entrada
                 usos = db.query(ProduccionSelladoraDetalle)\
                     .filter(ProduccionSelladoraDetalle.detalle_extrusora_id == det.id)\
                     .filter(ProduccionSelladoraDetalle.es_pack_parcial == False).all()
@@ -457,50 +457,25 @@ def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espeso
                             p = db.query(Producto).filter(Producto.id == op_sell.producto_id).first()
                             prod_nombre = p.nombre if p else ''
                         if op_sell.empresa_id:
-                            from app.models.empresa import Empresa
                             emp = db.query(Empresa).filter(Empresa.id == op_sell.empresa_id).first()
                             cliente_nombre = emp.nombre if emp else ''
 
-                    movimientos.append({
-                        'fecha': prod_sell.fecha if prod_sell else prod.fecha,
+                    saldo = round(saldo - uso.kilos, 2)
+                    result.append({
+                        'fecha': prod_sell.fecha.isoformat() if prod_sell and prod_sell.fecha else '',
                         'es': 'S',
                         'lote': prod.lote,
                         'op_id': op.id,
                         'op_sell_id': op_sell_id,
-                        'cliente': '',
+                        'cliente': cliente_nombre,
                         'numero_rollo': det.numero_rollo,
                         'kg': det.kg,
-                        'kg_mov': -uso.kilos,
+                        'kg_disponible_rollo': None,
                         'producto_sellado': prod_nombre,
-                        'cliente': cliente_nombre,
                         'unidades_producidas': uso.unidades,
                         'kg_ocupados': uso.kilos,
-                        'kg_disponible_rollo': None,  # las salidas no tienen disponible
+                        'saldo_kg': saldo
                     })
-
-    # Ordenar por fecha
-    movimientos.sort(key=lambda x: x['fecha'] if x['fecha'] else date.min)
-
-    # Calcular saldo acumulativo
-    saldo = 0
-    result = []
-    for m in movimientos:
-        saldo = round(saldo + m['kg_mov'], 2)
-        result.append({
-            'fecha': m['fecha'].isoformat() if m['fecha'] else '',
-            'es': m['es'],
-            'lote': m['lote'],
-            'op_id': m['op_id'],
-            'numero_rollo': m['numero_rollo'],
-            'kg': m['kg'],
-            'producto_sellado': m['producto_sellado'],
-            'unidades_producidas': m['unidades_producidas'],
-            'kg_ocupados': m['kg_ocupados'],
-            'kg_disponible_rollo': m.get('kg_disponible_rollo'),
-            'op_sell_id': m.get('op_sell_id'),
-            'cliente': m.get('cliente', ''),
-            'saldo_kg': saldo
-        })
 
     return result
 

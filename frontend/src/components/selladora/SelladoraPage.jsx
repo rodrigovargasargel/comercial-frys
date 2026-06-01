@@ -343,7 +343,7 @@ const handleGuardarScrap = async (prodId, scrap) => {
                 <React.Fragment key={op.id}>
                  <tr style={{ 
                       cursor: 'pointer',
-                      opacity: op.estado === 'completada' && hoveredOP !== op.id ? 0.4 : 1,
+                      opacity: op.estado === 'completada' && hoveredOP !== op.id ? 0.7 : 1,
                       background: op.estado === 'completada' && hoveredOP !== op.id ? '#175ca0' : ''
                     }}
                       className={opExpandida === op.id ? 'op-row-activa' : ''}
@@ -376,20 +376,20 @@ const handleGuardarScrap = async (prodId, scrap) => {
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
 
                       {op.estado === 'pendiente' && (
-                        <Button size="sm" variant="outline-danger" style={btnStyle}
+                        <Button size="sm" variant="outline-danger" 
                         style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                           onClick={() => handleEliminarOP(op.id)}>
                           <i className="fas fa-trash"></i>
                         </Button>
                       )}
-                      <Button size="sm" variant="outline-dark" className="me-1" style={btnStyle}
+                      <Button size="sm" variant="outline-dark" className="me-1" 
                       style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                         onClick={() => { setOpSeleccionada(op); setShowOPModal(true) }}>
                         <i className="fas fa-edit"></i>
                       </Button>
                       
 
-                      <Button size="sm" variant="outline-primary" className="me-1" style={btnStyle}
+                      <Button size="sm" variant="outline-primary" className="me-1" 
                        style={{ ...btnStyle, visibility: hoveredOP === op.id ? 'visible' : 'hidden' }}
                           onClick={() => { setOpParaGuia(op); setShowGuia(true) }}>
                           <i className="fas fa-truck"></i>

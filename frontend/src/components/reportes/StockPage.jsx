@@ -23,6 +23,8 @@ export default function StockPage() {
   const thStyle = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '5px 8px', whiteSpace: 'nowrap' }
   const tdStyle = { fontSize: 'clamp(10px,1.1vw,12px)', padding: '4px 8px', whiteSpace: 'nowrap' }
 
+  const [busquedaExt, setBusquedaExt] = useState('') //buscador extrusion
+
   useEffect(() => { cargar() }, [])
 
   const cargar = async () => {
@@ -94,6 +96,11 @@ export default function StockPage() {
       </th>
     )
   }
+  // filtro buscador E
+  const extFiltrada = (stock?.extrusora || []).filter(item => {
+  if (!busquedaExt.trim()) return true
+  return item.label.toLowerCase().includes(busquedaExt.toLowerCase())
+  })
 
   return (
     <Container fluid className="py-3 px-2 px-md-4">
@@ -117,10 +124,20 @@ export default function StockPage() {
           {/* EXTRUSORA */}
           <div className="col-12">
             <div className="card shadow-sm">
-              <div className="card-header bg-dark text-white py-2">
-                <i className="fas fa-industry me-2"></i>
-                <strong>EXTRUSORA (KG)</strong>
-              </div>
+              <div className="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+                  <span>
+                    <i className="fas fa-industry me-2"></i>
+                    <strong>EXTRUSORA (KG)</strong>
+                  </span>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm w-auto"
+                      placeholder="Buscar producto..."
+                      value={busquedaExt}
+                      onChange={e => setBusquedaExt(e.target.value)}
+                      style={{ minWidth: 200, background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
+                    />
+                </div>
               <div className="card-body p-0">
                 <Table hover className="mb-0">
                   <thead style={{ background: '#2E75B6', color: 'white' }}>
@@ -135,7 +152,7 @@ export default function StockPage() {
                   <tbody>
                     {stock.extrusora.length === 0 ? (
                       <tr><td colSpan={5} className="text-center text-muted py-3">Sin registros</td></tr>
-                    ) : sortData(stock.extrusora, sortExt).map((item) => {
+                    ) : sortData(extFiltrada, sortExt).map((item) => {
                       const key = `${item.producto_id}-${item.color_id}-${item.ancho}-${item.espesor}-${item.densidad}`
                       return (
                         <React.Fragment key={key}>
@@ -172,15 +189,19 @@ export default function StockPage() {
                                         <tr>
                                           <th style={thStyle}>Fecha</th>
                                           <th style={thStyle}>E/S</th>
+                                           <th style={thStyle}>#Rollo</th>
+                                           <th style={thStyle}>KG</th>
+                                            <th style={thStyle}>KG Usados</th>
+                                            <th style={thStyle}>Cliente</th>
                                           <th style={thStyle}>Lote</th>
-                                          <th style={thStyle}>OP</th>
-                                          <th style={thStyle}>Cliente</th>
-                                          <th style={thStyle}>#Rollo</th>
-                                          <th style={thStyle}>KG</th>
+                                          <th style={thStyle}>NP Ext</th>
+                                          <th style={thStyle}>NP SelL</th>                                        
+                                         
+                                          
                                           <th style={thStyle}>Prod. Sellado</th>
-                                          <th style={thStyle}>OP Sellado</th>
+                                          
                                           <th style={thStyle}>Unidades</th>
-                                          <th style={thStyle}>KG Usados</th>
+                                         
                                           <th style={thStyle}>Saldo KG</th>
                                         </tr>
                                       </thead>
@@ -188,7 +209,11 @@ export default function StockPage() {
                                         {(trazExt[key] || []).length === 0 ? (
                                           <tr><td colSpan={12} className="text-center text-muted py-2 small">Sin movimientos</td></tr>
                                         ) : (trazExt[key] || []).map((t, i) => (
-                                          <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8f9fa' }}>
+                                          <tr key={i} style={{ 
+                                                background: t.es === 'S' 
+                                                  ? 'rgba(220, 53, 69, 0.08)' 
+                                                  : i % 2 === 0 ? 'white' : '#f8f9fa' 
+                                              }}>
                                             <td style={tdStyle}>{formatFecha(t.fecha)}</td>
                                             <td style={tdStyle}>
                                               <Badge bg={t.es === 'E' ? 'success' : 'danger'}>{t.es}</Badge>
@@ -198,15 +223,21 @@ export default function StockPage() {
                                                 </Badge>
                                               )}
                                             </td>
-                                            <td style={tdStyle}>{t.lote}</td>
-                                            <td style={tdStyle}>{t.op_id}</td>
-                                            <td style={tdStyle}>{t.cliente || '—'}</td>
+
                                             <td style={tdStyle}>#{String(t.numero_rollo).padStart(3, '0')}</td>
-                                            <td style={tdStyle}><strong>{t.kg} kg</strong></td>
-                                            <td style={tdStyle}>{t.producto_sellado || '—'}</td>
-                                            <td style={tdStyle}>{t.op_sell_id || '—'}</td>
-                                            <td style={tdStyle}>{t.unidades_producidas !== null ? t.unidades_producidas.toLocaleString() : '—'}</td>
-                                            <td style={tdStyle}>{t.kg_ocupados !== null ? `${t.kg_ocupados} kg` : '—'}</td>
+                                            <td style={tdStyle}>{t.es === 'S' ? '—' : <strong>{t.kg} kg</strong>}</td>
+                                            <td style={tdStyle}>
+                                              {t.kg_ocupados !== null 
+                                                ? <strong>{t.kg_ocupados} kg</strong> 
+                                                : '—'}
+                                            </td>
+                                            <td style={tdStyle}>{t.cliente || '—'}</td>
+                                            <td style={tdStyle}>{t.lote}</td>
+                                            <td style={tdStyle}>{t.es === 'S' ? '—' : t.op_id}</td>
+                                            <td style={tdStyle}>{t.op_sell_id || '—'}</td>                                         
+                                            <td style={tdStyle}>{t.producto_sellado || '—'}</td>                                         
+                                            
+                                            <td style={tdStyle}>{t.unidades_producidas !== null ? t.unidades_producidas.toLocaleString() : '—'}</td>                                           
                                             <td style={tdStyle}>
                                               <span className={t.saldo_kg > 0 ? 'text-success fw-bold' : t.saldo_kg === 0 ? 'text-muted' : 'text-danger fw-bold'}>
                                                 {t.saldo_kg} kg

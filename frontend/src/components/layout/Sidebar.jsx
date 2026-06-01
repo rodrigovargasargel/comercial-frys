@@ -1,9 +1,21 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useState, useEffect } from 'react'
 
 export default function Sidebar() {
   const { usuario, doLogout } = useAuth()
   const navigate = useNavigate()
+
+  const [darkMode, setDarkMode] = useState(false)
+
+// Efecto que aplica/quita la clase al body para cambiar a moso oscuro darkness
+useEffect(() => {
+  if (darkMode) {
+    document.body.classList.add('dark-mode')
+  } else {
+    document.body.classList.remove('dark-mode')
+  }
+}, [darkMode])
 
   const menuCompleto = [
     { path: '/produccion-extrusora', icon: 'fa-industry', label: 'Producción Extrusora' },
@@ -55,6 +67,16 @@ export default function Sidebar() {
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>Conectado como</div>
         <div style={{ fontSize: 13, color: 'white', fontWeight: 600 }}>{usuario?.nombre}</div>
         <div style={{ fontSize: 11, color: '#e94560' }}>{usuario?.perfil}</div>
+
+        <div className="form-check form-switch mb-0" title="Modo oscuro">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={darkMode}
+            onChange={e => setDarkMode(e.target.checked)}
+            style={{ cursor: 'pointer' }}
+          />
+        </div>
       </div>
 
       {/* Menu */}
