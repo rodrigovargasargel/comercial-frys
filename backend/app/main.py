@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import users, maquinas, productos, empresas, produccion, auth, materia_prima, selladora, colores, reportes
 from app.core.config import settings
+from app.api import oc_ventas
 
 app = FastAPI(title="Comercial Frys - Sistema de Producción", version="1.0.0")
 origins = settings.ALLOWED_ORIGINS.split(",")
@@ -27,6 +28,7 @@ app.include_router(materia_prima.router)
 app.include_router(selladora.router)
 app.include_router(colores.router)
 app.include_router(reportes.router)
+app.include_router(oc_ventas.router)
 
 @app.get("/")
 def root():

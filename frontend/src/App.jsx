@@ -12,6 +12,11 @@ import SelladoraPage from './components/selladora/SelladoraPage'
 import ColoresPage from './components/colores/ColoresPage'
 import ReporteSemanaPage from './components/reportes/ReporteSemanaPage'
 import StockPage from './components/reportes/StockPage'
+import OCVentasPage from './components/oc_ventas/OCVentasPage'
+
+
+
+
 
 function RutaProtegida({ children, perfilesPermitidos }) {
   const { usuario } = useAuth()
@@ -97,6 +102,12 @@ function AppRoutes() {
         } />
 
       </Route>
+
+      <Route path="oc-ventas" element={
+      <RutaProtegida perfilesPermitidos={[1, 2]}>
+        <OCVentasPage />
+      </RutaProtegida>
+    } />
 
       
 

@@ -28,6 +28,7 @@ useEffect(() => {
     { path: '/colores', icon: 'fa-palette', label: 'Colores' },
     { path: '/informe-produccion', icon: 'fa-chart-bar', label: 'Informe Producción' },
     { path: '/stock', icon: 'fa-warehouse', label: 'Stock' },
+      { path: '/oc-ventas', icon: 'fa-tv', label: 'OC Ventas' },
     
   ]
 
@@ -40,6 +41,7 @@ useEffect(() => {
     { path: '/empresas', icon: 'fa-building', label: 'Empresas' },
     { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
     { path: '/colores', icon: 'fa-palette', label: 'Colores' },
+    { path: '/oc-ventas', icon: 'fa-tv', label: 'OC Ventas' },
    
   ]
 
