@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
+import Select from 'react-select'
 
 const initialForm = {
   fecha: '',
@@ -141,12 +142,22 @@ export default function OPModal({ show, onHide, onSave, op, productos, colores, 
             <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Cliente <span className="text-muted">(opcional)</span></Form.Label>
-                <Form.Select name="empresa_id" value={form.empresa_id} onChange={handleChange}>
-                  <option value="">Sin cliente</option>
-                  {empresas.filter(e => e.tipo_empresa === 'cliente').map(e => (
-                    <option key={e.id} value={e.id}>{e.nombre}</option>
-                  ))}
-                </Form.Select>
+                <Select
+                  options={empresas
+                    .filter(e => e.tipo_empresa === 'cliente')
+                    .map(e => ({ value: e.id, label: e.nombre }))}
+                  value={form.empresa_id 
+                    ? { value: form.empresa_id, label: empresas.find(e => e.id === parseInt(form.empresa_id))?.nombre || '' }
+                    : null}
+                  onChange={opt => setForm(prev => ({ ...prev, empresa_id: opt ? opt.value : '' }))}
+                  isClearable
+                  placeholder="Buscar cliente..."
+                  noOptionsMessage={() => 'Sin resultados'}
+                  styles={{
+                    control: (base) => ({ ...base, minHeight: 38, fontSize: 14 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 })
+                  }}
+                />
               </Form.Group>
             </Col>
             <Col md={4}>
