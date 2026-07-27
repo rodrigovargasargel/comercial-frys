@@ -101,6 +101,7 @@ def get_semana_datos(db: Session, lunes: date):
             ProduccionSelladora.fecha, ProduccionSelladora.turno
         ).all()
 
+       
     
 
     return dias, ext_rows, sell_rows
@@ -139,10 +140,12 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
         dens = 'AD' if r.densidad == 'alta' else 'BD'
         key = f"EXT|{get_producto(r.producto_id)}|{dens}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}"
         if key not in ext_data:
-            ext_data[key] = {'label': f"KG {get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {r.ancho}x{r.espesor} ", 'dia': {}, 'noche': {}}
+            ext_data[key] = {'label': f"KG {get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {r.ancho}x{r.espesor}", 'dia': {}, 'noche': {}}
         fecha_str = r.fecha.isoformat()
-        ext_data[key][r.turno][fecha_str] = round(float(r.total_kg), 2)
-
+        turno = r.turno
+        if fecha_str not in ext_data[key][turno]:
+            ext_data[key][turno][fecha_str] = 0
+        ext_data[key][turno][fecha_str] += round(float(r.total_kg), 2)
 
    # Obtener densidades de selladora
     op_sell_ids = list(set(r.producto_id for r in sell_rows))  # ids únicos
@@ -155,9 +158,11 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
     densidades_sell = get_densidades_selladora(db, op_sell_ids_list)       
 
    # Agrupar selladora
+    # Agrupar selladora
     sell_data = {}
+   
     for r in sell_rows:
-        # Buscar densidad de esta OP selladora
+        
         op_sell = db.query(OPSelladora).filter(
             OPSelladora.producto_id == r.producto_id,
             OPSelladora.color_id == r.color_id,
@@ -165,7 +170,6 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
             OPSelladora.espesor == r.espesor,
             OPSelladora.largo == r.largo
         ).first()
-        #dens = densidades_sell.get(op_sell.id, '') if op_sell else ''
         dens = densidades_sell.get(r.id, '')
         key = f"SELL|{get_producto(r.producto_id)}|{get_color(r.color_id)}|{r.ancho}x{r.espesor}x{r.largo}|{dens}"
         if key not in sell_data:
@@ -174,7 +178,9 @@ def get_reporte_semana(fecha: Optional[str] = None, db: Session = Depends(get_db
                 'dia': {}, 'noche': {}
             }
         fecha_str = r.fecha.isoformat()
-        sell_data[key][r.turno][fecha_str] = int(r.total_unidades)
+        if fecha_str not in sell_data[key][r.turno]:
+            sell_data[key][r.turno][fecha_str] = 0
+        sell_data[key][r.turno][fecha_str] += int(r.total_unidades)
 
     return {
         'lunes': lunes.isoformat(),
@@ -278,7 +284,6 @@ def get_stock(db: Session = Depends(get_db)):
 
     # --- SELLADORA: unidades producidas por producto/color/ancho/espesor/largo ---
     sell_rows = db.query(
-        OPSelladora.id,
         OPSelladora.producto_id,
         OPSelladora.color_id,
         OPSelladora.ancho,
@@ -288,9 +293,14 @@ def get_stock(db: Session = Depends(get_db)):
     ).join(ProduccionSelladora, ProduccionSelladora.op_id == OPSelladora.id)\
      .join(ProduccionSelladoraDetalle, ProduccionSelladoraDetalle.produccion_selladora_id == ProduccionSelladora.id)\
      .group_by(
-         OPSelladora.id, OPSelladora.producto_id, OPSelladora.color_id,
+         OPSelladora.producto_id, OPSelladora.color_id,
          OPSelladora.ancho, OPSelladora.espesor, OPSelladora.largo
      ).all()
+  
+    print(f"sell_rows: {len(sell_rows)}")
+    for r in sell_rows:
+        print(f"  prod={r.producto_id} color={r.color_id} {r.ancho}x{r.espesor}x{r.largo} total={r.unidades_total}")
+
 
      #************* contador saldo y rollos disponibles en stock
 
@@ -348,7 +358,8 @@ def get_stock(db: Session = Depends(get_db)):
         return colores_cache[cid]
 
     # Densidades selladora
-    op_sell_ids = [r.id for r in sell_rows]
+    op_sell_ids = db.query(OPSelladora.id).all()
+    op_sell_ids = [r.id for r in op_sell_ids]
     densidades_sell = get_densidades_selladora(db, op_sell_ids)
 
     extrusora = []
@@ -371,9 +382,17 @@ def get_stock(db: Session = Depends(get_db)):
 
     selladora = []
     for r in sell_rows:
-        dens = densidades_sell.get(r.id, '')
+        # Buscar densidad usando cualquier OP que coincida
+        op_match = db.query(OPSelladora).filter(
+            OPSelladora.producto_id == r.producto_id,
+            OPSelladora.color_id == r.color_id,
+            OPSelladora.ancho == r.ancho,
+            OPSelladora.espesor == r.espesor,
+            OPSelladora.largo == r.largo
+        ).first()
+        dens = densidades_sell.get(op_match.id, '') if op_match else ''
         selladora.append({
-            'op_id': r.id,
+            'op_id': op_match.id if op_match else None,
             'producto_id': r.producto_id,
             'color_id': r.color_id,
             'label': f"{get_producto(r.producto_id)} {dens} {get_color(r.color_id)} {int(r.ancho)}x{int(r.espesor)}x{int(r.largo)}",
@@ -383,10 +402,11 @@ def get_stock(db: Session = Depends(get_db)):
             'largo': r.largo
         })
 
-    return {
+    return {                    # ← AGREGAR AQUÍ
         'extrusora': extrusora,
         'selladora': selladora
     }
+
 
 @router.get("/stock/trazabilidad-extrusora")
 def trazabilidad_extrusora(producto_id: int, color_id: int, ancho: float, espesor: float, densidad: str, db: Session = Depends(get_db)):
@@ -491,38 +511,49 @@ def trazabilidad_selladora(op_id: int, db: Session = Depends(get_db)):
     from app.models.selladora import OPSelladora, ProduccionSelladora, ProduccionSelladoraDetalle
     from app.models.empresa import Empresa
 
+    # Buscar la OP para obtener producto/color/medidas
     op = db.query(OPSelladora).filter(OPSelladora.id == op_id).first()
     if not op:
         return []
 
-    prods = db.query(ProduccionSelladora).filter(ProduccionSelladora.op_id == op_id).all()
+    # Buscar TODAS las OPs con mismo producto/color/medidas
+    ops_match = db.query(OPSelladora).filter(
+        OPSelladora.producto_id == op.producto_id,
+        OPSelladora.color_id == op.color_id,
+        OPSelladora.ancho == op.ancho,
+        OPSelladora.espesor == op.espesor,
+        OPSelladora.largo == op.largo
+    ).all()
 
     result = []
     saldo_acumulado = 0
 
-    for prod in prods:
-        dets = db.query(ProduccionSelladoraDetalle)\
-            .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id).all()
-        for det in dets:
-            saldo_acumulado += det.unidades
-            cliente = ''
-            if op.empresa_id:
-                emp = db.query(Empresa).filter(Empresa.id == op.empresa_id).first()
-                cliente = emp.nombre if emp else ''
+    for op_item in ops_match:
+        prods = db.query(ProduccionSelladora).filter(
+            ProduccionSelladora.op_id == op_item.id
+        ).order_by(ProduccionSelladora.fecha).all()
 
-            lote = ''
-            if det.detalle_extrusora and det.detalle_extrusora.produccion:
-                lote = det.detalle_extrusora.produccion.lote
+        for prod in prods:
+            dets = db.query(ProduccionSelladoraDetalle)\
+                .filter(ProduccionSelladoraDetalle.produccion_selladora_id == prod.id).all()
+            for det in dets:
+                saldo_acumulado += det.unidades
+                cliente = ''
+                if op_item.empresa_id:
+                    emp = db.query(Empresa).filter(Empresa.id == op_item.empresa_id).first()
+                    cliente = emp.nombre if emp else ''
 
-            result.append({
-                'fecha': prod.fecha.isoformat() if prod.fecha else '',
-                'lote': lote,
-                'es': 'E',
-                'cantidad': det.unidades,
-                'cliente': cliente,
-                'saldo': saldo_acumulado
-            })
+                lote = ''
+                if det.detalle_extrusora and det.detalle_extrusora.produccion:
+                    lote = det.detalle_extrusora.produccion.lote
+
+                result.append({
+                    'fecha': prod.fecha.isoformat() if prod.fecha else '',
+                    'lote': lote,
+                    'es': 'E',
+                    'cantidad': det.unidades,
+                    'cliente': cliente,
+                    'saldo': saldo_acumulado
+                })
 
     return result
-
-    
