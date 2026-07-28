@@ -99,7 +99,7 @@ export default function OCVentasModal({ show, onHide, onSave, registro, empresas
                 <Form.Select name="estado" value={form.estado} onChange={handleChange} required>
                   <option value="Pendiente">Pendiente</option>
                   <option value="Con Saldo a despachar">Con Saldo a despachar</option>
-                  <option value="Despachado">Despachado</option>
+                  <option value="Despachado">Terminada</option>
                 </Form.Select>
               </Form.Group>
             </Col>

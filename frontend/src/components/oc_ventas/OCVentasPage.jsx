@@ -18,7 +18,7 @@ const formatFecha = (fecha) => {
 const estadoBadge = (estado) => {
   if (estado === 'Pendiente') return <Badge bg="warning" text="dark">Pendiente</Badge>
   if (estado === 'Con Saldo a despachar') return <Badge bg="info" text="dark">Con Saldo</Badge>
-  if (estado === 'Despachado') return <Badge bg="success">Despachado</Badge>
+  if (estado === 'Despachado') return <Badge bg="success">Terminada</Badge>
   return <Badge bg="secondary">{estado}</Badge>
 }
 
@@ -49,7 +49,11 @@ export default function OCVentasPage() {
     }
   }
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => { 
+    cargar()
+    const intervalo = setInterval(cargar, 30000)
+    return () => clearInterval(intervalo)
+    }, [])
 
   const handleGuardar = async (data) => {
     try {

@@ -11,7 +11,14 @@ router = APIRouter(prefix="/oc-ventas", tags=["oc_ventas"])
 
 @router.get("/", response_model=List[OCVentaOut])
 def listar(db: Session = Depends(get_db)):
-    return db.query(OCVenta).order_by(OCVenta.fecha.desc()).all()
+    from sqlalchemy import case
+    orden_estado = case(
+        (OCVenta.estado == 'Pendiente', 1),
+        (OCVenta.estado == 'Con Saldo a despachar', 2),
+        (OCVenta.estado == 'Despachado', 3),
+        else_=4
+    )
+    return db.query(OCVenta).order_by(orden_estado, OCVenta.fecha.desc()).all()
 
 @router.post("/", response_model=OCVentaOut, status_code=201)
 def crear(data: OCVentaCreate, db: Session = Depends(get_db)):
