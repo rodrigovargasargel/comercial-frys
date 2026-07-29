@@ -557,3 +557,133 @@ def trazabilidad_selladora(op_id: int, db: Session = Depends(get_db)):
                 })
 
     return result
+
+@router.get("/mp")
+def get_reporte_mp(mes: int = None, anio: int = None, db: Session = Depends(get_db)):
+    from app.models.materia_prima import MateriaPrima, MateriaPrimaDetalle, MateriaPrimaTipo
+    from app.models.produccion import Color
+    from sqlalchemy import func, extract
+
+    query = db.query(
+        MateriaPrimaTipo.nombre.label('tipo'),
+        Color.nombre.label('color'),
+        func.sum(MateriaPrimaDetalle.kg).label('total_kg')
+    ).join(MateriaPrimaDetalle, MateriaPrimaDetalle.mp_tipo_id == MateriaPrimaTipo.id)\
+     .join(MateriaPrima, MateriaPrima.id == MateriaPrimaDetalle.mp_id)\
+     .join(Color, Color.id == MateriaPrimaDetalle.color_id)
+
+    if mes and anio:
+        query = query.filter(
+            extract('month', MateriaPrima.fecha) == mes,
+            extract('year', MateriaPrima.fecha) == anio
+        )
+    elif anio:
+        query = query.filter(extract('year', MateriaPrima.fecha) == anio)
+
+    rows = query.group_by(MateriaPrimaTipo.nombre, Color.nombre)\
+                .order_by(MateriaPrimaTipo.nombre, Color.nombre).all()
+
+    return [{'tipo': r.tipo, 'color': r.color, 'total_kg': round(float(r.total_kg), 2)} for r in rows]
+
+
+@router.get("/mp/excel")
+def excel_reporte_mp(mes: int = None, anio: int = None, db: Session = Depends(get_db)):
+    import io  
+    from app.models.materia_prima import MateriaPrima, MateriaPrimaDetalle, MateriaPrimaTipo
+    from app.models.produccion import Color
+    from sqlalchemy import func, extract
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    query = db.query(
+        MateriaPrimaTipo.nombre.label('tipo'),
+        Color.nombre.label('color'),
+        func.sum(MateriaPrimaDetalle.kg).label('total_kg')
+    ).join(MateriaPrimaDetalle, MateriaPrimaDetalle.mp_tipo_id == MateriaPrimaTipo.id)\
+     .join(MateriaPrima, MateriaPrima.id == MateriaPrimaDetalle.mp_id)\
+     .join(Color, Color.id == MateriaPrimaDetalle.color_id)
+
+    if mes and anio:
+        query = query.filter(
+            extract('month', MateriaPrima.fecha) == mes,
+            extract('year', MateriaPrima.fecha) == anio
+        )
+    elif anio:
+        query = query.filter(extract('year', MateriaPrima.fecha) == anio)
+
+    rows = query.group_by(MateriaPrimaTipo.nombre, Color.nombre)\
+                .order_by(MateriaPrimaTipo.nombre, Color.nombre).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Informe MP"
+
+    thin = Side(style='thin')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    header_fill = PatternFill('solid', fgColor='1F3864')
+    alt_fill = PatternFill('solid', fgColor='EBF3FB')
+
+    titulo = f"INFORME MATERIA PRIMA"
+    if mes and anio:
+        meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+        titulo += f" — {meses[mes]} {anio}"
+    elif anio:
+        titulo += f" — {anio}"
+
+    ws.merge_cells('A1:C1')
+    c = ws['A1']
+    c.value = titulo
+    c.font = Font(bold=True, size=14, color='FFFFFF')
+    c.fill = header_fill
+    c.alignment = Alignment(horizontal='center')
+    ws.row_dimensions[1].height = 24
+
+    headers = ['Tipo MP', 'Color', 'Total KG']
+    for i, h in enumerate(headers, 1):
+        c = ws.cell(row=2, column=i, value=h)
+        c.font = Font(bold=True, color='FFFFFF', size=11)
+        c.fill = PatternFill('solid', fgColor='2E75B6')
+        c.alignment = Alignment(horizontal='center')
+        c.border = border
+
+    total = 0
+    for row_idx, r in enumerate(rows, 3):
+        fill = alt_fill if row_idx % 2 == 0 else PatternFill('solid', fgColor='FFFFFF')
+        for col, val in enumerate([r.tipo, r.color, round(float(r.total_kg), 2)], 1):
+            c = ws.cell(row=row_idx, column=col, value=val)
+            c.font = Font(size=10)
+            c.border = border
+            c.fill = fill
+            if col == 3:
+                c.alignment = Alignment(horizontal='center')
+        total += float(r.total_kg)
+
+    total_row = len(rows) + 3
+    ws.merge_cells(f'A{total_row}:B{total_row}')
+    c = ws[f'A{total_row}']
+    c.value = 'TOTAL'
+    c.font = Font(bold=True, color='FFFFFF')
+    c.fill = header_fill
+    c.alignment = Alignment(horizontal='right')
+    c.border = border
+    tc = ws[f'C{total_row}']
+    tc.value = round(total, 2)
+    tc.font = Font(bold=True, color='FFFFFF')
+    tc.fill = header_fill
+    tc.alignment = Alignment(horizontal='center')
+    tc.border = border
+
+    col_letters = ['A', 'B', 'C']
+    anchos = [30, 20, 15]
+    for letra, w in zip(col_letters, anchos):
+        ws.column_dimensions[letra].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': 'attachment; filename="Informe_MP.xlsx"'}
+    )    
+

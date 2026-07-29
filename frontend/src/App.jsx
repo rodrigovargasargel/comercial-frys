@@ -13,6 +13,7 @@ import ColoresPage from './components/colores/ColoresPage'
 import ReporteSemanaPage from './components/reportes/ReporteSemanaPage'
 import StockPage from './components/reportes/StockPage'
 import OCVentasPage from './components/oc_ventas/OCVentasPage'
+import ReporteMPPage from './components/reportes/ReporteMPPage'
 
 
 
@@ -106,6 +107,14 @@ function AppRoutes() {
       <Route path="oc-ventas" element={
       <RutaProtegida perfilesPermitidos={[1, 2]}>
         <OCVentasPage />
+      </RutaProtegida>
+    } />
+
+    
+
+    <Route path="informe-mp" element={
+      <RutaProtegida perfilesPermitidos={[1, 2]}>
+        <ReporteMPPage />
       </RutaProtegida>
     } />
 

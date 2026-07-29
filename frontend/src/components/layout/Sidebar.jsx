@@ -1,115 +1,159 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { useState, useEffect } from 'react'
 
 export default function Sidebar() {
   const { usuario, doLogout } = useAuth()
   const navigate = useNavigate()
-
   const [darkMode, setDarkMode] = useState(false)
+  const [expandedMenu, setExpandedMenu] = useState(null)
 
-// Efecto que aplica/quita la clase al body para cambiar a moso oscuro darkness
-useEffect(() => {
-  if (darkMode) {
-    document.body.classList.add('dark-mode')
-  } else {
-    document.body.classList.remove('dark-mode')
-  }
-}, [darkMode])
-
-  const menuCompleto = [
-    { path: '/produccion-extrusora', icon: 'fa-industry', label: 'Producción Extrusora' },
-    { path: '/produccion-selladora', icon: 'fa-cut', label: 'Producción Selladora' },
-    { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
-     { path: '/maquinas', icon: 'fa-robot', label: 'Maquinas' },
-    { path: '/usuarios', icon: 'fa-users', label: 'Usuarios' },
-    { path: '/productos', icon: 'fa-cubes', label: 'Productos' },
-    { path: '/empresas', icon: 'fa-building', label: 'Empresas' },    
-    { path: '/colores', icon: 'fa-palette', label: 'Colores' },
-    { path: '/informe-produccion', icon: 'fa-chart-bar', label: 'Informe Producción' },
-    { path: '/stock', icon: 'fa-warehouse', label: 'Stock' },
-      { path: '/oc-ventas', icon: 'fa-tv', label: 'OC Ventas' },
-    
-  ]
-
-  const menuOperario = [
-    { path: '/produccion-extrusora', icon: 'fa-industry', label: 'Producción Extrusora' },
-    { path: '/produccion-selladora', icon: 'fa-cut', label: 'Producción Selladora' },
-     { path: '/maquinas', icon: 'fa-robot', label: 'Maquinas' },
-    { path: '/usuarios', icon: 'fa-users', label: 'Usuarios' },
-    { path: '/productos', icon: 'fa-cubes', label: 'Productos' },
-    { path: '/empresas', icon: 'fa-building', label: 'Empresas' },
-    { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima' },
-    { path: '/colores', icon: 'fa-palette', label: 'Colores' },
-    { path: '/oc-ventas', icon: 'fa-tv', label: 'OC Ventas' },
-   
-  ]
-
-  const menu = usuario?.perfil_id === 3 ? menuOperario : menuCompleto
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode')
+    } else {
+      document.body.classList.remove('dark-mode')
+    }
+  }, [darkMode])
 
   const handleLogout = () => {
     doLogout()
     navigate('/login')
   }
 
+  const menuItems = [
+    { path: '/produccion-extrusora', icon: 'fa-industry', label: 'Producción Extrusora', perfiles: [1,2,3] },
+    { path: '/produccion-selladora', icon: 'fa-cut', label: 'Producción Selladora', perfiles: [1,2,3] },
+    { path: '/materia-prima', icon: 'fa-boxes', label: 'Materia Prima', perfiles: [1,2,3] },
+    { path: '/empresas', icon: 'fa-building', label: 'Empresas', perfiles: [1,2] },
+    { path: '/informe-produccion', icon: 'fa-chart-bar', label: 'Informe Producción', perfiles: [1,2] },
+    { path: '/informe-mp', icon: 'fa-boxes', label: 'Informe de MP', perfiles: [1,2] },
+    { path: '/stock', icon: 'fa-warehouse', label: 'Stock', perfiles: [1,2] },
+    { path: '/oc-ventas', icon: 'fa-tv', label: 'OC Ventas', perfiles: [1,2] },
+    {
+      label: 'Mantenedores', icon: 'fa-cogs', perfiles: [1,2],
+      submenu: [
+        { path: '/maquinas', icon: 'fa-cog', label: 'Máquinas' },
+        { path: '/colores', icon: 'fa-palette', label: 'Colores' },
+        { path: '/usuarios', icon: 'fa-users', label: 'Usuarios' },
+        { path: '/productos', icon: 'fa-box', label: 'Productos' },
+      ]
+    },
+  ]
+
+  const navLinkStyle = ({ isActive }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: '10px 20px',
+    textDecoration: 'none',
+    fontSize: 13,
+    color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
+    background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+    transition: 'all 0.2s',
+  })
+
   return (
     <div style={{
-      width: 240, minHeight: '100vh', background: '#1a1a2e',
-      display: 'flex', flexDirection: 'column', position: 'fixed', left: 0, top: 0, zIndex: 100
+      width: 240,
+      minHeight: '100vh',
+      background: 'rgb(26, 26, 46)',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      zIndex: 100,
     }}>
-      {/* Logo */}
+      {/* Logo / Título */}
       <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 3, marginBottom: 4 }}>SISTEMA</div>
-        <div style={{ fontSize: 18, color: 'white', fontWeight: 'bold', letterSpacing: 2 }}> FRYS PRO</div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Producción</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: 2, textTransform: 'uppercase' }}>Sistema</div>
+        <div style={{ fontSize: 20, color: 'white', fontWeight: 700, letterSpacing: 1 }}>FRYS PRO</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Producción</div>
       </div>
 
       {/* Usuario logueado */}
       <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>Conectado como</div>
         <div style={{ fontSize: 13, color: 'white', fontWeight: 600 }}>{usuario?.nombre}</div>
-        <div style={{ fontSize: 11, color: '#e94560' }}>{usuario?.perfil}</div>
-
-        <div className="form-check form-switch mb-0" title="Modo oscuro">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={darkMode}
-            onChange={e => setDarkMode(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
+        <div className="d-flex justify-content-between align-items-center mt-1">
+          <span style={{ fontSize: 11, color: '#e94560' }}>{usuario?.perfil}</span>
+          <div className="form-check form-switch mb-0" title="Modo oscuro">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              checked={darkMode}
+              onChange={e => setDarkMode(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Menu */}
-      <nav style={{ flex: 1, padding: '16px 0' }}>
-        {menu.map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 24px',
-              color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
-              background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-              borderLeft: isActive ? '3px solid #e94560' : '3px solid transparent',
-              textDecoration: 'none', fontSize: 14, transition: 'all 0.2s'
-            })}
-          >
-            <i className={`fas ${item.icon}`} style={{ width: 18, textAlign: 'center' }}></i>
-            {item.label}
-          </NavLink>
-        ))}
+      {/* Menú */}
+      <nav style={{ flex: '1 1 0%', padding: '16px 0px' }}>
+        {menuItems
+          .filter(item => !item.perfiles || item.perfiles.includes(usuario?.perfil_id))
+          .map((item, idx) => {
+            if (item.submenu) {
+              const isExpanded = expandedMenu === item.label
+              return (
+                <div key={idx}>
+                  <div
+                    onClick={() => setExpandedMenu(isExpanded ? null : item.label)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 20px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)',
+                      fontSize: 13, transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+                  >
+                    <span>
+                      <i className={`fas ${item.icon}`} style={{ width: 20, marginRight: 10 }}></i>
+                      {item.label}
+                    </span>
+                    <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'}`} style={{ fontSize: 10 }}></i>
+                  </div>
+                  {isExpanded && item.submenu.map((sub, sidx) => (
+                    <NavLink key={sidx} to={sub.path}
+                      style={({ isActive }) => ({
+                        display: 'flex', alignItems: 'center',
+                        padding: '8px 20px 8px 44px', textDecoration: 'none',
+                        fontSize: 12,
+                        color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+                        background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      })}>
+                      <i className={`fas ${sub.icon}`} style={{ width: 18, marginRight: 8 }}></i>
+                      {sub.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )
+            }
+            return (
+              <NavLink key={idx} to={item.path} style={navLinkStyle}>
+                <i className={`fas ${item.icon}`} style={{ width: 20, marginRight: 10 }}></i>
+                {item.label}
+              </NavLink>
+            )
+          })}
       </nav>
 
       {/* Logout */}
       <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <button onClick={handleLogout} style={{
-          width: '100%', padding: '10px', background: 'rgba(233,69,96,0.15)',
-          color: '#e94560', border: '1px solid rgba(233,69,96,0.3)',
-          borderRadius: 6, fontSize: 13, cursor: 'pointer', fontWeight: 600
-        }}>
-          <i className="fas fa-sign-out-alt me-2"></i>Cerrar sesión
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%', padding: '8px', background: 'rgba(233,69,96,0.2)',
+            border: '1px solid rgba(233,69,96,0.3)', borderRadius: 6,
+            color: '#e94560', cursor: 'pointer', fontSize: 13,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(233,69,96,0.4)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(233,69,96,0.2)'}
+        >
+          <i className="fas fa-sign-out-alt me-2"></i>
+          Cerrar Sesión
         </button>
       </div>
     </div>

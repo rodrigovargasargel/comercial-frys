@@ -23,3 +23,20 @@ export const getExcelSemana = async (fecha) => {
   link.click()
   window.URL.revokeObjectURL(link.href)
 }
+
+export const getReporteMP = (mes, anio) => API.get('/reportes/mp', { params: { mes, anio } })
+
+export const getExcelMP = async (mes, anio) => {
+  const API_URL = import.meta.env.VITE_API_URL
+  const params = new URLSearchParams()
+  if (mes) params.append('mes', mes)
+  if (anio) params.append('anio', anio)
+  const response = await fetch(`${API_URL}/reportes/mp/excel?${params}`)
+  const blob = await response.blob()
+  const xlsxBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const link = document.createElement('a')
+  link.href = window.URL.createObjectURL(xlsxBlob)
+  link.download = `Informe_MP.xlsx`
+  link.click()
+  window.URL.revokeObjectURL(link.href)
+}
