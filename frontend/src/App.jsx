@@ -102,6 +102,13 @@ function AppRoutes() {
           </RutaProtegida>
         } />
 
+
+       <Route path="informe-mp" element={
+          <RutaProtegida perfilesPermitidos={[1, 2]}>
+            <ReporteMPPage />
+          </RutaProtegida>
+        } />  
+
       </Route>
 
       <Route path="oc-ventas" element={
@@ -111,14 +118,7 @@ function AppRoutes() {
     } />
 
     
-
-    <Route path="informe-mp" element={
-      <RutaProtegida perfilesPermitidos={[1, 2]}>
-        <ReporteMPPage />
-      </RutaProtegida>
-    } />
-
-      
+    
 
       
     </Routes>
