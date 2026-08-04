@@ -180,7 +180,7 @@ def create_detalle(db: Session, data: ProduccionSelladoraDetalleCreate):
         kilos_imp=data.kilos_imp,
         imprimir_kg=data.imprimir_kg,
         mostrar_titulo=data.mostrar_titulo,
-        es_pack_parcial=data.es_pack_parcial
+        es_pack_parcial=data.es_pack_parcial,
         invertir_medidas=data.invertir_medidas
     )
     db.add(detalle)
