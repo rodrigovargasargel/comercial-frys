@@ -26,6 +26,8 @@ export default function StockPage() {
   const [busquedaExt, setBusquedaExt] = useState('') //buscador extrusion
   const [extColapsada, setExtColapsada] = useState(false) //pestaña retractil en extrusion
 
+  const [soloConStock, setSoloConStock] = useState(true) // solo stocck > 0
+
   useEffect(() => { cargar() }, [])
 
   const cargar = async () => {
@@ -98,10 +100,16 @@ export default function StockPage() {
     )
   }
   // filtro buscador E
-  const extFiltrada = (stock?.extrusora || []).filter(item => {
-  if (!busquedaExt.trim()) return true
-  return item.label.toLowerCase().includes(busquedaExt.toLowerCase())
+
+
+  // boton traer todos con stock y sin stock
+
+  const extFiltrada = (stock?.extrusora || [])
+  .filter(item => {
+    if (!busquedaExt.trim()) return true
+    return item.label.toLowerCase().includes(busquedaExt.toLowerCase())
   })
+  .filter(item => soloConStock ? item.kg_saldo > 0 : true)
 
   return (
     <Container fluid className="py-3 px-2 px-md-4">
@@ -126,24 +134,30 @@ export default function StockPage() {
           <div className="col-12">
             <div className="card shadow-sm">
               <div className="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
-                  <span style={{ cursor: 'pointer' }} onClick={() => setExtColapsada(!extColapsada)}>
-                    <i className={`fas fa-chevron-${extColapsada ? 'right' : 'down'} me-2`}></i>
-                    <i className="fas fa-industry me-2"></i>
-                    <strong>EXTRUSORA (KG)</strong>
-                  
-                  </span>
+                <span style={{ cursor: 'pointer' }} onClick={() => setExtColapsada(!extColapsada)}>
+                  <i className={`fas fa-chevron-${extColapsada ? 'right' : 'down'} me-2`}></i>
+                  <i className="fas fa-industry me-2"></i>
+                  <strong>EXTRUSORA (KG)</strong>
+                </span>
+                <div className="d-flex gap-2 align-items-center">
+                  <Button 
+                    size="sm" 
+                    variant={soloConStock ? 'warning' : 'outline-light'}
+                    onClick={() => setSoloConStock(!soloConStock)}
+                    title={soloConStock ? 'Mostrando solo con stock' : 'Mostrando todo'}>
+                    <i className={`fas fa-filter me-1`}></i>
+                    {soloConStock ? 'Solo con stock' : 'Mostrar todo'}
+                  </Button>
                   <input
                     type="text"
                     className="form-control form-control-sm w-auto"
                     placeholder="Buscar producto..."
                     value={busquedaExt}
                     onChange={e => setBusquedaExt(e.target.value)}
-                    style={{ minWidth: 200, background: 'rgba(222, 144, 144, 0.7)', color: 'rgba(240, 233, 233, 0.86)', border: '1px solid rgba(255,255,255,0.3)' }}
+                    style={{ minWidth: 200, background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
                   />
-                  <span style={{ cursor: 'pointer' }} onClick={() => setExtColapsada(!extColapsada)}>
-                  <i className={`fas fa-chevron-${extColapsada ? 'right' : 'down'} me-2`}></i>
-                  </span>
                 </div>
+              </div>
               {!extColapsada && (  
               <div className="card-body p-0">
                 <Table hover className="mb-0">

@@ -21,7 +21,7 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
     })()
 
   const qrData = JSON.stringify({
-  empresa: "Comercial Frys Ltda." , 
+  ...(detalle?.mostrar_titulo && { empresa: "Comercial Frys Ltda." }) , 
   producto: op.producto?.nombre,
   color: op.color?.nombre,
   densidad: detalle.densidad_extrusora,
@@ -86,9 +86,12 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 </div>
 
                 {/* Medidas */}
-                <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 2 }}>
-                {op.ancho} × {op.largo} × {op.espesor} µ
-                </div>
+                <div style={{ fontSize: 22 }}>
+                    {detalle?.invertir_medidas
+                      ? `${op.largo} cm x ${op.espesor} µ x ${op.ancho} cm`
+                      : `${op.ancho} cm x ${op.espesor} µ x ${op.largo} cm`
+                    }
+                  </div>
 
                 {/* Unidades */}
                 {/* Unidades y Kilos */}

@@ -108,6 +108,7 @@ def listar_detalles(prod_id: int, db: Session = Depends(get_db)):
             lote_extrusora=lote,
             fecha_extrusora=fecha,
             densidad_extrusora=densidad,
+            invertir_medidas=d.invertir_medidas,
             created_at=d.created_at
         ))
     return result
@@ -155,6 +156,7 @@ def actualizar_detalle(detalle_id: int, body: dict, db: Session = Depends(get_db
     det.unidades = det.q_paquetes * det.q_unidades_por_paquete
     det.kilos = body.get('kilos_producidos', det.kilos)
     det.kilos_imp = body.get('kilos_imp', det.kilos_imp)
+    det.invertir_medidas = body.get('invertir_medidas', det.invertir_medidas)
 
     det.imprimir_kg = body.get('imprimir_kg', det.imprimir_kg)
     det.mostrar_titulo = body.get('mostrar_titulo', det.mostrar_titulo)

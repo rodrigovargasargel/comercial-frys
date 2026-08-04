@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap'
 
 export default function EditarDetalleSelladoraModal({ show, onHide, onSave, detalle, op }) {
-  const [form, setForm] = useState({ q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false,  kilos_imp: '', mostrar_titulo: true})
+  const [form, setForm] = useState({ q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', imprimir_kg: false,  kilos_imp: '',invertir_medidas: false, mostrar_titulo: true})
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -43,6 +43,7 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
     kilos_producidos: kgIngresados,
     kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
     imprimir_kg: form.imprimir_kg,
+    invertir_medidas: form.invertir_medidas,
     mostrar_titulo: form.mostrar_titulo
   })
 }
@@ -100,7 +101,7 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
                   </Col>
                 </Row>
               <Col md={6} className="d-flex align-items-center pt-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Check
                   type="checkbox"
                   label="KG en la etiqueta"
@@ -108,7 +109,7 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
                   onChange={e => setForm(prev => ({ ...prev, imprimir_kg: e.target.checked }))}
                 />
               </Col>
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Check
                       type="checkbox"
                       label="Título en etiqueta"
@@ -116,7 +117,16 @@ export default function EditarDetalleSelladoraModal({ show, onHide, onSave, deta
                       onChange={e => setForm(prev => ({ ...prev, mostrar_titulo: e.target.checked }))}
                       className="mt-2"
                       />
-              </Col>        
+              </Col>  
+              <Col md={4}>
+              <Form.Check
+                type="checkbox"
+                label="Invertir medidas"
+                checked={form.invertir_medidas}
+                onChange={e => setForm(prev => ({ ...prev, invertir_medidas: e.target.checked }))}
+                className="mt-2"
+              />      
+              </Col>
             </Col>
           </Row>
 

@@ -58,3 +58,4 @@ class ProduccionSelladoraDetalle(Base):
 
     produccion = relationship("ProduccionSelladora", back_populates="detalles")
     detalle_extrusora = relationship("DetalleProduccionExtrusora")
+    invertir_medidas = Column(Boolean, default=False, nullable=False)

@@ -10,7 +10,7 @@ export default function DetalleSelladoraModal({ show, onHide, onSave, produccion
 
   useEffect(() => {
   if (show && op) {
-    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', kilos_imp: '', imprimir_kg: false, mostrar_titulo: true})
+    setForm({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', kilos_imp: '', imprimir_kg: false, mostrar_titulo: true, invertir_medidas: false})
     setError(null)
     cargarRollos()
   }
@@ -70,7 +70,9 @@ useEffect(() => {
     imprimir_kg: form.imprimir_kg,
     kilos_imp: form.kilos_imp ? parseFloat(form.kilos_imp) : null,
     mostrar_titulo: form.mostrar_titulo,
+    invertir_medidas: form.invertir_medidas,
     es_pack_parcial: false
+
   })
 }
   return (
@@ -155,7 +157,7 @@ useEffect(() => {
                       </Col>
                    </Col>
                    </row>
-                  <Col md={6}>
+                  <Col md={4}>
                   <Form.Check
                       type="checkbox"
                       label="Imprimir KG en la etiqueta"
@@ -165,7 +167,7 @@ useEffect(() => {
                 
                   />
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                   <Form.Check
                     type="checkbox"
                     label="Título en etiqueta"
@@ -173,6 +175,15 @@ useEffect(() => {
                     onChange={e => setForm(prev => ({ ...prev, mostrar_titulo: e.target.checked }))}
                     className="mt-2"
                   />
+                </Col>
+                <Col md={4}>
+                                <Form.Check
+                  type="checkbox"
+                  label="Invertir medidas"
+                  checked={form.invertir_medidas}
+                  onChange={e => setForm(prev => ({ ...prev, invertir_medidas: e.target.checked }))}
+                  className="mt-2"
+                />
                 </Col>
                 </Form.Group>
 

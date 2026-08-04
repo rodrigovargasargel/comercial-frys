@@ -89,7 +89,7 @@ class ProduccionSelladoraDetalleCreate(BaseModel):
     mostrar_titulo: bool = True
     es_pack_parcial: bool = False
     pythonkilos_imp: Optional[float] = None
-
+    invertir_medidas: bool = False
 
 
 class ProduccionSelladoraDetalleOut(BaseModel):
@@ -104,7 +104,7 @@ class ProduccionSelladoraDetalleOut(BaseModel):
     mostrar_titulo: bool = True
     es_pack_parcial: bool = False
     kilos_imp: Optional[float] = None
-
+    invertir_medidas: bool = False
     numero_rollo: int = 0
     lote_extrusora: Optional[str] = None
     fecha_extrusora: Optional[date] = None
