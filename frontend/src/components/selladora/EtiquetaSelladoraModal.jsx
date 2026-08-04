@@ -86,12 +86,12 @@ export default function EtiquetaSelladoraModal({ show, onHide, detalle, producci
                 </div>
 
                 {/* Medidas */}
-                <div style={{ fontSize: 22 }}>
-                    {detalle?.invertir_medidas
-                      ? `${op.largo} cm x ${op.espesor} µ x ${op.ancho} cm`
-                      : `${op.ancho} cm x ${op.espesor} µ x ${op.largo} cm`
-                    }
-                  </div>
+                <div style={{ fontSize: 20 }}>
+                  {detalle?.invertir_medidas
+                    ? `${op.largo} cm x ${op.ancho} cm x ${op.espesor} µ`
+                    : `${op.ancho} cm x ${op.largo} cm x ${op.espesor} µ`
+                  }
+                </div>
 
                 {/* Unidades */}
                 {/* Unidades y Kilos */}
