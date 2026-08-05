@@ -99,53 +99,47 @@ export default function ReporteMPPage() {
         <div className="text-center text-muted py-5">Sin datos para el período seleccionado</div>
       ) : (
         <div className="card shadow-sm">
-          <div className="card-body p-0">
-            <Table hover className="mb-0 align-middle">
-              <thead style={{ background: '#1F3864', color: 'white' }}>
-                <tr>
-                  <th style={thStyle}>Tipo MP</th>
-                  <th style={thStyle}>Color</th>
-                  <th style={{ ...thStyle, textAlign: 'center' }}>Total KG</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(agrupado).map(([tipo, items]) => (
-                  <>
-                    {items.map((r, i) => (
-                      <tr key={`${tipo}-${i}`} style={{ background: i % 2 === 0 ? 'white' : '#f0f4f8' }}>
-                        {i === 0 && (
-                          <td style={{ ...tdStyle, fontWeight: 'bold' }} rowSpan={items.length}>
-                            <Badge bg="dark">{tipo}</Badge>
-                          </td>
-                        )}
-                        <td style={tdStyle}>{r.color}</td>
-                        <td style={{ ...tdStyle, textAlign: 'center' }}>
-                          <span className="text-primary fw-bold">{r.total_kg.toLocaleString()} kg</span>
-                        </td>
-                      </tr>
-                    ))}
-                    <tr style={{ background: '#EBF3FB' }}>
-                      <td colSpan={2} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', color: '#1F3864' }}>
-                        Subtotal {tipo}:
-                      </td>
-                      <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', color: '#1F3864' }}>
-                        {items.reduce((s, r) => s + r.total_kg, 0).toLocaleString()} kg
-                      </td>
-                    </tr>
-                  </>
-                ))}
-                <tr style={{ background: '#1F3864' }}>
-                  <td colSpan={2} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', color: 'white' }}>
-                    TOTAL GENERAL:
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', color: 'white' }}>
-                    {totalKg.toLocaleString()} kg
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
-        </div>
+  <div className="card-body p-0">
+    <Table className="mb-0 align-middle" style={{ borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <td colSpan={3} style={{ 
+            background: '#1F3864', color: 'white', 
+            textAlign: 'center', fontWeight: 'bold', 
+            fontSize: 16, padding: '12px' 
+          }}>
+            INFORME MATERIA PRIMA
+            {(mes || anio) && ` — ${mes ? meses.find(m => m.value === parseInt(mes))?.label : ''} ${anio || ''}`}
+          </td>
+        </tr>
+        <tr style={{ background: '#2E75B6', color: 'white' }}>
+          <th style={{ ...thStyle, textAlign: 'center' }}>Tipo MP</th>
+          <th style={{ ...thStyle, textAlign: 'center' }}>Color</th>
+          <th style={{ ...thStyle, textAlign: 'center' }}>Total KG</th>
+        </tr>
+      </thead>
+      <tbody>
+        {datos.map((r, i) => (
+          <tr key={i} style={{ background: 'white', borderBottom: '1px solid #dee2e6' }}>
+            <td style={{ ...tdStyle, color: '#1F3864' }}>{r.tipo}</td>
+            <td style={{ ...tdStyle, color: '#2E75B6' }}>{r.color}</td>
+            <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', color: '#1F3864' }}>
+              {r.total_kg.toLocaleString()}
+            </td>
+          </tr>
+        ))}
+        <tr style={{ background: '#1F3864' }}>
+          <td colSpan={2} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', color: 'white' }}>
+            TOTAL
+          </td>
+          <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', color: 'white' }}>
+            {totalKg.toLocaleString()}
+          </td>
+        </tr>
+      </tbody>
+    </Table>
+  </div>
+</div>
       )}
     </Container>
   )
