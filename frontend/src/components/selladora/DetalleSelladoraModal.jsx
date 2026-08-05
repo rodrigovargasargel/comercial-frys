@@ -8,20 +8,22 @@ export default function DetalleSelladoraModal({ show, onHide, onSave, produccion
  const [form, setForm] = useState({ detalle_extrusora_id: '', q_paquetes: '', q_unidades_por_paquete: '', kilos_producidos: '', kilos_imp: '', imprimir_kg: false, mostrar_titulo: true })
   const [error, setError] = useState(null)
 
- useEffect(() => {
-  if (show && detalle) {
-    setForm({
-      q_paquetes: detalle.q_paquetes,
-      q_unidades_por_paquete: detalle.q_unidades_por_paquete,
-      kilos_producidos: detalle.kilos,
-      kilos_imp: detalle.kilos_imp || '',
-      imprimir_kg: detalle.imprimir_kg || false,
-      mostrar_titulo: detalle.mostrar_titulo !== false,
-      invertir_medidas: detalle.invertir_medidas || false  // ← agregar
+useEffect(() => {
+  if (show && op) {
+    setForm({ 
+      detalle_extrusora_id: '', 
+      q_paquetes: '', 
+      q_unidades_por_paquete: '', 
+      kilos_producidos: '',
+      kilos_imp: '',
+      imprimir_kg: false,
+      mostrar_titulo: true,
+      invertir_medidas: false
     })
     setError(null)
+    cargarRollos()
   }
-}, [show, detalle])
+}, [show, op])
 
 useEffect(() => {
   if (form.detalle_extrusora_id) {
